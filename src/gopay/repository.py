@@ -10,6 +10,7 @@ class MemoireRepository:
         self.wallets: dict[int, Wallet] = {}
         self.transferts: dict[int, Transfert] = {}
         self.transactions: dict[int, Transaction] = {}
+        self.webhooks: dict[int, tuple[str, str]] = {}  # marchand_id → (url, secret)
         self._compteurs = {"wallet": 0, "transfert": 0, "transaction": 0}
 
     def _prochain_id(self, nom: str) -> int:

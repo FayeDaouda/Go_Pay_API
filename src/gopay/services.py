@@ -122,6 +122,16 @@ class GoPayService:
             client, "paiement_envoye", montant, Decimal("0"), reference=f"marchand:{marchand.id}"
         )
 
+    # ----- Webhooks des marchands (R15) -----
+    def configurer_webhook(self, marchand_id: int, url: str) -> str:
+        """Enregistre l'adresse du marchand et lui remet un secret, affiché une seule fois."""
+        marchand = self.lire_wallet(marchand_id)
+        if marchand.type != "marchand":
+            raise OperationInterdite("Seul un wallet marchand peut recevoir des webhooks.")
+        secret = secrets.token_hex(32)
+        self.repo.webhooks[marchand_id] = (url, secret)
+        return secret
+
     # ----- Historique -----
     def historique(self, wallet_id: int, cursor: int | None, limit: int) -> tuple[list[Transaction], int | None]:
         self.lire_wallet(wallet_id)
