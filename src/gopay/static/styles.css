@@ -1,15 +1,18 @@
 /* Go Pay : feuille de style de l'interface web.
-   Indigo pour les actions, safran pour le ticket de retrait, bissap pour les erreurs. */
+   Indigo pour les actions et la carte de solde, safran pour le ticket de retrait,
+   bissap pour les erreurs, menthe pour les confirmations. */
 
 :root {
   --papier: #f2f3f7;
   --surface: #ffffff;
   --encre: #171a33;
   --encre-douce: #565b75;
-  --trait: #d8dbe6;
+  --encre-legere: #8a8fa8;
+  --trait: #dfe2eb;
   --indigo: #24307a;
   --indigo-fonce: #1a2359;
-  --indigo-pale: #e6e8f5;
+  --indigo-nuit: #151c4a;
+  --indigo-pale: #e8eaf6;
   --safran: #f2b33d;
   --safran-pale: #fdf1d6;
   --bissap: #a3214f;
@@ -20,143 +23,202 @@
   --police-titre: "Unbounded", "Arial Black", system-ui, sans-serif;
   --police-texte: "Schibsted Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
 
-  --rayon-champ: 10px;
-  --rayon-panneau: 20px;
+  --rayon-champ: 12px;
+  --rayon-bloc: 22px;
+  --ombre-douce: 0 1px 2px rgba(23, 26, 51, 0.04), 0 8px 24px -12px rgba(23, 26, 51, 0.12);
   color-scheme: light;
 }
 
 * { box-sizing: border-box; }
-
 html { -webkit-text-size-adjust: 100%; }
 
 body {
-  margin: 0;
-  background: var(--papier);
-  color: var(--encre);
+  margin: 0; min-height: 100vh; display: flex; flex-direction: column;
+  background: var(--papier); color: var(--encre);
   font: 400 1rem/1.5 var(--police-texte);
   -webkit-font-smoothing: antialiased;
 }
 
-h1, h2, p, ol, dl, dd, fieldset { margin: 0; padding: 0; }
-ol { list-style: none; }
+h1, h2, p, ol, ul, dl, dd, fieldset { margin: 0; padding: 0; }
+ol, ul { list-style: none; }
 fieldset { border: 0; min-width: 0; }
-
-h2 { font-size: 1.375rem; line-height: 1.25; font-weight: 700; letter-spacing: -0.01em; }
+h2 { font-size: 1.25rem; line-height: 1.3; font-weight: 700; letter-spacing: -0.01em; }
 
 [hidden] { display: none !important; }
-
-.visuellement-cache {
-  position: absolute; width: 1px; height: 1px; overflow: hidden;
-  clip: rect(0 0 0 0); white-space: nowrap;
-}
-
 :focus-visible { outline: 3px solid var(--safran); outline-offset: 2px; }
+
+.icone {
+  width: 22px; height: 22px; flex: none;
+  fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+}
 
 /* ---------- Barre du haut ---------- */
 .barre {
-  display: flex; align-items: center; gap: 24px;
+  display: flex; align-items: center; gap: 24px; width: 100%;
   max-width: 1200px; margin: 0 auto; padding: 20px 24px;
 }
 
 .marque {
+  display: inline-flex; align-items: center; gap: 10px;
   font: 700 1.375rem/1 var(--police-titre);
   color: var(--indigo); text-decoration: none; letter-spacing: -0.02em;
 }
-
-.espaces {
-  display: inline-flex; padding: 4px; gap: 4px;
-  background: var(--indigo-pale); border-radius: 999px;
+.marque-signe {
+  width: 28px; height: 28px; border-radius: 9px; background: var(--indigo); position: relative;
+}
+.marque-signe::after {
+  content: ""; position: absolute; right: 5px; bottom: 5px;
+  width: 9px; height: 9px; border-radius: 50%; background: var(--safran);
 }
 
+.espaces { display: inline-flex; padding: 4px; gap: 4px; background: var(--indigo-pale); border-radius: 999px; }
 .espace {
-  border: 0; background: transparent; color: var(--indigo);
-  font: 600 0.9375rem/1 var(--police-texte);
-  padding: 10px 18px; border-radius: 999px; cursor: pointer;
+  border: 0; background: transparent; color: var(--indigo); cursor: pointer;
+  font: 600 0.9375rem/1 var(--police-texte); padding: 10px 18px; border-radius: 999px;
 }
 .espace[aria-pressed="true"] { background: var(--indigo); color: #fff; }
 
-.etat-api {
-  margin-left: auto; display: inline-flex; align-items: center; gap: 8px;
-  font-size: 0.875rem; color: var(--encre-douce);
-}
+.etat-api { margin-left: auto; display: inline-flex; align-items: center; gap: 8px; font-size: 0.875rem; color: var(--encre-douce); }
 .pastille { width: 9px; height: 9px; border-radius: 50%; background: var(--trait); }
-.etat-api[data-etat="ok"] .pastille { background: var(--menthe); }
-.etat-api[data-etat="ko"] .pastille { background: var(--bissap); }
+.etat-api[data-etat="ok"] .pastille { background: var(--menthe); box-shadow: 0 0 0 4px var(--menthe-pale); }
+.etat-api[data-etat="ko"] .pastille { background: var(--bissap); box-shadow: 0 0 0 4px var(--bissap-pale); }
 .etat-api[data-etat="ko"] { color: var(--bissap); }
 
 /* ---------- Mise en page ---------- */
-.page { max-width: 1200px; margin: 0 auto; padding: 8px 24px 64px; }
+.page { flex: 1; width: 100%; max-width: 1200px; margin: 0 auto; padding: 4px 24px 56px; }
 
-.espace-client {
-  display: grid; grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+.tableau {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
   gap: 28px; align-items: start;
 }
+.colonne-principale { min-width: 0; }
+.colonne-cote { display: grid; gap: 20px; position: sticky; top: 16px; }
 
-.espace-agent {
-  display: grid; grid-template-columns: minmax(280px, 400px) minmax(0, 1fr);
-  gap: 28px; align-items: start;
+.bloc {
+  background: var(--surface); border-radius: var(--rayon-bloc);
+  padding: 24px; box-shadow: var(--ombre-douce);
 }
 
-.portefeuille, .operations, .guichet, .flux {
-  background: var(--surface); border: 1px solid var(--trait);
-  border-radius: var(--rayon-panneau);
-}
-
-.portefeuille { padding: 24px; position: sticky; top: 16px; }
-.operations { padding: 8px 28px 32px; }
-.guichet { padding: 28px; }
-.flux { padding: 28px; }
-
-/* ---------- Solde : le chiffre principal de la page ---------- */
-.solde { margin: 28px 0 24px; }
-.solde-libelle { font-size: 0.9375rem; color: var(--encre-douce); }
-.solde-montant {
-  font: 700 clamp(2.25rem, 5vw, 3.25rem)/1.05 var(--police-titre);
-  letter-spacing: -0.03em; font-variant-numeric: tabular-nums;
-  margin-top: 6px; overflow-wrap: anywhere;
-}
-.solde-devise { font-size: 0.42em; font-weight: 500; letter-spacing: 0; color: var(--encre-douce); }
-.solde-infos { margin-top: 10px; color: var(--encre-douce); font-size: 0.9375rem; }
-
-.vide-wallet { margin: 24px 0; color: var(--encre-douce); }
-
-.nouveau-wallet { border-top: 1px solid var(--trait); padding-top: 16px; }
-.nouveau-wallet summary {
-  cursor: pointer; font-weight: 600; color: var(--indigo);
-  list-style: none; display: flex; align-items: center; gap: 8px;
-}
-.nouveau-wallet summary::-webkit-details-marker { display: none; }
-.nouveau-wallet summary::before {
-  content: "+"; display: inline-grid; place-items: center;
-  width: 24px; height: 24px; border-radius: 50%;
-  background: var(--indigo-pale); font-weight: 700;
-}
-.nouveau-wallet[open] summary::before { content: "\2212"; }
-.nouveau-wallet .formulaire { margin-top: 16px; }
-
-/* ---------- Onglets ---------- */
-.onglets {
-  display: flex; gap: 4px; border-bottom: 1px solid var(--trait);
-  overflow-x: auto; scrollbar-width: none; margin: 0 -8px;
-}
-.onglets::-webkit-scrollbar { display: none; }
-
-.onglet {
-  flex: none; border: 0; background: transparent; cursor: pointer;
-  font: 500 0.9375rem/1 var(--police-texte); color: var(--encre-douce);
-  padding: 18px 12px 15px; border-bottom: 3px solid transparent;
-}
-.onglet:hover { color: var(--encre); }
-.onglet[aria-selected="true"] { color: var(--indigo); font-weight: 700; border-bottom-color: var(--indigo); }
-
-.panneau { padding-top: 28px; max-width: 620px; }
-.panneau > .aide, .guichet > .aide { margin-top: 8px; }
+.salutation { margin: 8px 0 20px; }
+.salutation h1 { font: 700 clamp(1.625rem, 3.4vw, 2.125rem)/1.15 var(--police-titre); letter-spacing: -0.025em; }
+.salutation p { margin-top: 6px; color: var(--encre-douce); font-size: 1.0625rem; }
 
 .aide { color: var(--encre-douce); max-width: 60ch; }
 
+/* ---------- Bienvenue (aucun wallet) ---------- */
+.bienvenue {
+  display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(300px, 420px);
+  gap: 40px; align-items: center; padding: 32px 0 16px;
+}
+.bienvenue h1 {
+  font: 700 clamp(2rem, 5vw, 3.25rem)/1.05 var(--police-titre); letter-spacing: -0.035em;
+  color: var(--indigo-nuit); max-width: 14ch;
+}
+.bienvenue-intro { margin-top: 18px; font-size: 1.1875rem; line-height: 1.55; color: var(--encre-douce); max-width: 46ch; }
+.etapes { margin-top: 32px; display: grid; gap: 18px; max-width: 48ch; }
+.etapes li { display: flex; gap: 16px; align-items: flex-start; }
+.etape-numero {
+  flex: none; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%;
+  background: var(--safran); color: var(--encre); font: 700 0.9375rem/1 var(--police-titre);
+}
+.etapes strong { color: var(--encre); }
+.etapes li > span:last-child { color: var(--encre-douce); padding-top: 6px; }
+.bienvenue-formulaire { background: var(--surface); border-radius: var(--rayon-bloc); padding: 28px; box-shadow: var(--ombre-douce); }
+
+/* ---------- Carte de solde : la pièce maîtresse de l'accueil ---------- */
+.carte-solde {
+  position: relative; overflow: hidden; isolation: isolate;
+  background: var(--indigo); color: #fff; border-radius: 26px;
+  padding: 26px 28px 28px; min-height: 196px;
+  display: flex; flex-direction: column;
+}
+.carte-motif {
+  position: absolute; inset: 0 0 0 auto; width: 62%; height: 100%; z-index: -1;
+  color: var(--safran); opacity: 0.28;
+  -webkit-mask-image: linear-gradient(to left, #000 15%, transparent 95%);
+  mask-image: linear-gradient(to left, #000 15%, transparent 95%);
+}
+.carte-haut { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.carte-libelle { color: rgba(255, 255, 255, 0.78); font-weight: 500; }
+.carte-oeil {
+  display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+  border: 0; border-radius: 999px; padding: 7px 12px 7px 10px;
+  background: rgba(255, 255, 255, 0.12); color: #fff; font: 500 0.875rem/1 var(--police-texte);
+}
+.carte-oeil:hover { background: rgba(255, 255, 255, 0.2); }
+.carte-oeil .icone { width: 18px; height: 18px; }
+.carte-montant {
+  margin-top: auto; padding-top: 22px;
+  font: 700 clamp(2.5rem, 6vw, 3.75rem)/1 var(--police-titre);
+  letter-spacing: -0.035em; font-variant-numeric: tabular-nums; overflow-wrap: anywhere;
+}
+.carte-devise { font-size: 0.38em; font-weight: 500; letter-spacing: 0; color: var(--safran); }
+.carte-infos { margin-top: 12px; color: rgba(255, 255, 255, 0.78); }
+
+/* ---------- Tuiles d'action ---------- */
+.actions { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; margin: 20px 0; }
+.action {
+  display: flex; flex-direction: column; align-items: center; gap: 10px; cursor: pointer;
+  padding: 16px 8px 14px; border: 0; border-radius: 18px;
+  background: var(--surface); color: var(--encre); box-shadow: var(--ombre-douce);
+  font: 600 0.9375rem/1.2 var(--police-texte); text-align: center;
+}
+.action-icone {
+  display: grid; place-items: center; width: 46px; height: 46px; border-radius: 50%;
+  background: var(--indigo-pale); color: var(--indigo);
+}
+.action:hover .action-icone { background: #d9ddf2; }
+.action[aria-selected="true"] { background: var(--indigo-nuit); color: #fff; }
+.action[aria-selected="true"] .action-icone { background: var(--safran); color: var(--indigo-nuit); }
+
+.panneaux { background: var(--surface); border-radius: var(--rayon-bloc); box-shadow: var(--ombre-douce); padding: 28px; }
+.panneau { max-width: 620px; }
+.panneau > .aide { margin-top: 6px; }
+
+/* ---------- Colonne de côté ---------- */
+.wallets { margin-top: 14px; display: grid; gap: 4px; max-height: 320px; overflow-y: auto; margin-inline: -10px; padding-inline: 4px; }
+.wallet {
+  width: 100%; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px;
+  padding: 10px 8px; border: 0; border-radius: 14px; background: transparent; cursor: pointer;
+  font: inherit; color: inherit; text-align: left;
+}
+.wallet:hover { background: var(--papier); }
+.wallet[aria-current="true"] { background: var(--indigo-pale); }
+.wallet-nom { font-weight: 600; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wallet-type { font-size: 0.8125rem; color: var(--encre-douce); }
+.wallet-solde { font-size: 0.875rem; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.avatar {
+  display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%;
+  font: 700 0.875rem/1 var(--police-titre); letter-spacing: -0.02em;
+}
+.avatar[data-teinte="0"] { background: var(--indigo-pale); color: var(--indigo); }
+.avatar[data-teinte="1"] { background: var(--safran-pale); color: #8a5a00; }
+.avatar[data-teinte="2"] { background: var(--menthe-pale); color: var(--menthe); }
+.avatar[data-teinte="3"] { background: var(--bissap-pale); color: var(--bissap); }
+.avatar-marchand { border-radius: 12px; }
+
+.nouveau-wallet { margin-top: 12px; border-top: 1px solid var(--trait); padding-top: 14px; }
+.nouveau-wallet summary {
+  cursor: pointer; font-weight: 600; color: var(--indigo);
+  list-style: none; display: flex; align-items: center; gap: 10px;
+}
+.nouveau-wallet summary::-webkit-details-marker { display: none; }
+.rond-plus { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--indigo-pale); }
+.rond-plus .icone { width: 16px; height: 16px; stroke-width: 2.2; }
+.nouveau-wallet[open] .rond-plus { transform: rotate(45deg); }
+.nouveau-wallet .formulaire { margin-top: 16px; }
+
+.lien {
+  margin-top: 12px; border: 0; background: none; padding: 4px 0; cursor: pointer;
+  font: 600 0.9375rem/1.3 var(--police-texte); color: var(--indigo);
+  text-decoration: underline; text-decoration-color: var(--indigo-pale); text-underline-offset: 4px; text-decoration-thickness: 2px;
+}
+.lien:hover { text-decoration-color: var(--indigo); }
+
 /* ---------- Formulaires ---------- */
-.formulaire { display: grid; gap: 18px; margin-top: 24px; }
-.guichet .formulaire { margin-top: 20px; }
+.formulaire { display: grid; gap: 18px; margin-top: 22px; }
+.bienvenue-formulaire .formulaire { margin-top: 18px; }
 
 .champ { display: grid; gap: 6px; }
 .champ label, .choix legend { font-size: 0.9375rem; font-weight: 600; }
@@ -164,56 +226,71 @@ h2 { font-size: 1.375rem; line-height: 1.25; font-weight: 700; letter-spacing: -
 input, select {
   width: 100%; min-height: 50px; font: inherit; color: var(--encre);
   padding: 12px 14px; background: var(--surface);
-  border: 1px solid var(--trait); border-radius: var(--rayon-champ);
+  border: 1.5px solid var(--trait); border-radius: var(--rayon-champ);
 }
-input::placeholder { color: #9a9eb3; }
-input:focus, select:focus { outline: none; border-color: var(--indigo); box-shadow: 0 0 0 3px var(--indigo-pale); }
-input[aria-invalid="true"] { border-color: var(--bissap); }
+input::placeholder { color: #a3a7bd; }
+input:hover, select:hover { border-color: #c7cbd9; }
+input:focus, select:focus { outline: none; border-color: var(--indigo); box-shadow: 0 0 0 4px var(--indigo-pale); }
 
 .apercu { font-size: 0.875rem; color: var(--encre-douce); }
 .apercu strong { color: var(--encre); font-weight: 600; font-variant-numeric: tabular-nums; }
 
-/* Choix sous forme de boutons (type de wallet, devise) */
 .choix { display: flex; flex-wrap: wrap; gap: 8px; }
 .choix legend { width: 100%; margin-bottom: 6px; }
 .choix label { position: relative; }
-.choix input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.choix input { position: absolute; opacity: 0; width: 1px; height: 1px; min-height: 0; }
 .choix span {
-  display: inline-block; padding: 9px 16px; border-radius: 999px; cursor: pointer;
-  border: 1px solid var(--trait); font-weight: 500;
+  display: inline-block; padding: 9px 18px; border-radius: 999px; cursor: pointer;
+  border: 1.5px solid var(--trait); font-weight: 500;
 }
 .choix input:checked + span { background: var(--indigo); border-color: var(--indigo); color: #fff; }
 .choix input:focus-visible + span { outline: 3px solid var(--safran); outline-offset: 2px; }
 
-.montants-rapides { display: flex; flex-wrap: wrap; gap: 8px; margin-top: -6px; }
-.montants-rapides button {
+.pastilles-montant, .recents { display: flex; flex-wrap: wrap; gap: 8px; }
+.pastilles-montant { margin-top: -6px; }
+.recents { margin-top: 4px; align-items: center; }
+.recents-libelle { font-size: 0.8125rem; color: var(--encre-douce); margin-right: 2px; }
+.pastilles-montant button, .recents button {
   font: 500 0.875rem/1 var(--police-texte); color: var(--indigo); cursor: pointer;
   background: var(--indigo-pale); border: 0; border-radius: 999px; padding: 9px 14px;
   font-variant-numeric: tabular-nums;
 }
+.pastilles-montant button:hover, .recents button:hover { background: #d9ddf2; }
 
 .bouton {
-  justify-self: start; border: 0; cursor: pointer;
-  font: 600 1rem/1 var(--police-texte); color: #fff; background: var(--indigo);
-  padding: 15px 22px; border-radius: 12px;
+  justify-self: start; display: inline-flex; align-items: center; gap: 8px;
+  border: 0; cursor: pointer; font: 600 1rem/1 var(--police-texte); color: #fff;
+  background: var(--indigo); padding: 16px 24px; border-radius: 14px;
 }
 .bouton:hover { background: var(--indigo-fonce); }
 .bouton:disabled { opacity: 0.55; cursor: progress; }
-
 .bouton-secondaire { background: transparent; color: var(--indigo); box-shadow: inset 0 0 0 1.5px var(--indigo); }
 .bouton-secondaire:hover { background: var(--indigo-pale); }
+.bienvenue-formulaire .bouton { justify-self: stretch; justify-content: center; }
 
 /* ---------- Messages ---------- */
 .retour:empty { display: none; }
-.message { padding: 14px 16px; border-radius: 12px; max-width: 60ch; }
+.message { padding: 14px 16px; border-radius: 14px; max-width: 60ch; }
 .message-erreur { background: var(--bissap-pale); color: var(--bissap); }
 .message-ok { background: var(--menthe-pale); color: var(--menthe); }
 .message strong { display: block; color: inherit; }
-
 .conversion { margin-top: 12px; color: var(--encre-douce); }
 
+.notifications {
+  position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 10;
+  display: grid; gap: 8px; width: min(420px, calc(100% - 32px));
+}
+.notification {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 18px; border-radius: 16px; background: var(--indigo-nuit); color: #fff;
+  box-shadow: 0 12px 32px -12px rgba(21, 28, 74, 0.55); font-weight: 500;
+  animation: notification-entree 260ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.notification::before { content: ""; flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--safran); }
+@keyframes notification-entree { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+
 /* ---------- Le ticket de retrait ---------- */
-.ticket { background: var(--safran); border-radius: 16px; margin-top: 8px; max-width: 520px; }
+.ticket { background: var(--safran); border-radius: 18px; margin-top: 8px; max-width: 520px; }
 .ticket-haut { padding: 24px 26px 22px; }
 .ticket-titre { font-weight: 600; }
 .ticket-code {
@@ -228,115 +305,141 @@ input[aria-invalid="true"] { border-color: var(--bissap); }
 /* La découpe : un pointillé et deux encoches, comme un ticket de guichet */
 .ticket-decoupe { position: relative; height: 0; margin: 0 22px; border-top: 2px dashed rgba(23, 26, 51, 0.3); }
 .ticket-decoupe::before, .ticket-decoupe::after {
-  content: ""; position: absolute; top: -12px; width: 22px; height: 22px;
-  border-radius: 50%; background: var(--surface);
+  content: ""; position: absolute; top: -12px; width: 22px; height: 22px; border-radius: 50%; background: var(--surface);
 }
 .ticket-decoupe::before { left: -34px; }
 .ticket-decoupe::after { right: -34px; }
 
 .ticket-bas { padding: 18px 26px 24px; }
-.ticket-details {
-  display: grid; grid-template-columns: max-content 1fr; gap: 6px 20px;
-  font-variant-numeric: tabular-nums;
-}
+.ticket-details { display: grid; grid-template-columns: max-content 1fr; gap: 6px 20px; font-variant-numeric: tabular-nums; }
 .ticket-details dt { color: rgba(23, 26, 51, 0.72); }
 .ticket-details dd { font-weight: 600; text-align: right; }
 
-.suivi { display: flex; gap: 0; margin-top: 20px; }
-.suivi-etape { flex: 1; position: relative; display: flex; align-items: center; gap: 10px; font-weight: 500; }
+.suivi { display: flex; margin-top: 20px; }
+.suivi-etape { flex: 1; display: flex; align-items: center; gap: 10px; font-weight: 500; }
 .suivi-etape + .suivi-etape { padding-left: 12px; }
-.suivi-point {
-  flex: none; width: 14px; height: 14px; border-radius: 50%;
-  border: 2px solid var(--encre); background: transparent;
-}
+.suivi-point { flex: none; width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--encre); }
 .suivi-etape[data-etat="actif"] .suivi-point { background: var(--encre); box-shadow: 0 0 0 4px rgba(23, 26, 51, 0.14); }
 .suivi-etape[data-etat="fait"] .suivi-point { background: var(--menthe); border-color: var(--menthe); }
 .suivi-etape[data-etat="fait"] .suivi-texte { font-weight: 700; }
 .suivi-etape:not([data-etat]) { opacity: 0.55; }
 
-/* Le code apparaît chiffre par chiffre : le seul mouvement automatique de la page */
-@keyframes apparition-chiffre {
-  from { opacity: 0; transform: translateY(0.35em); }
-  to { opacity: 1; transform: none; }
-}
+/* Le code apparaît chiffre par chiffre : le moment fort de la page */
+@keyframes apparition-chiffre { from { opacity: 0; transform: translateY(0.35em); } to { opacity: 1; transform: none; } }
 .ticket-code .chiffre { animation: apparition-chiffre 360ms cubic-bezier(0.2, 0.7, 0.2, 1) both; }
 
-/* ---------- Historique ---------- */
-.filtres {
-  display: grid; grid-template-columns: 1.4fr 1fr 1fr auto; gap: 12px;
-  align-items: end; margin-top: 20px;
+/* ---------- Listes d'opérations (activité récente et historique) ---------- */
+.operations-liste li {
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 2px 14px; align-items: center;
+  padding: 12px 0; border-bottom: 1px solid var(--trait);
 }
-.filtres .bouton { padding: 13px 18px; }
-#historique-retour { margin-top: 16px; }
-
-.historique { margin-top: 20px; }
-.historique li {
-  display: grid; grid-template-columns: 1fr auto; gap: 4px 16px;
-  padding: 14px 0; border-bottom: 1px solid var(--trait);
+.operations-liste li:last-child { border-bottom: 0; }
+.operation-pastille {
+  grid-row: 1 / span 2; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%;
+  background: var(--papier); color: var(--encre-douce);
 }
-.historique li:first-child { border-top: 1px solid var(--trait); }
-.operation-libelle { font-weight: 600; }
-.operation-date { font-size: 0.875rem; color: var(--encre-douce); }
+.operation-pastille .icone { width: 19px; height: 19px; }
+.operation-pastille[data-sens="entree"] { background: var(--menthe-pale); color: var(--menthe); }
+.operation-libelle { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.operation-date { grid-column: 2; font-size: 0.8125rem; color: var(--encre-douce); }
 .operation-montant {
-  font: 500 1.0625rem/1.3 var(--police-titre); text-align: right;
-  font-variant-numeric: tabular-nums; letter-spacing: -0.01em; white-space: nowrap;
+  grid-row: 1; grid-column: 3; text-align: right; white-space: nowrap;
+  font: 500 1rem/1.3 var(--police-titre); letter-spacing: -0.01em; font-variant-numeric: tabular-nums;
 }
 .operation-montant[data-sens="entree"] { color: var(--menthe); }
-.operation-detail { font-size: 0.875rem; color: var(--encre-douce); text-align: right; }
-.historique-vide { padding: 24px 0; color: var(--encre-douce); }
-#historique-plus { margin-top: 20px; }
+.operation-detail { grid-column: 3; font-size: 0.8125rem; color: var(--encre-douce); text-align: right; }
+.operations-liste .liste-vide { display: block; padding: 18px 0; color: var(--encre-douce); border: 0; }
+
+.operations-compactes { margin-top: 8px; }
+.operations-compactes .operation-detail { display: none; }
+.operations-compactes .operation-montant { font-size: 0.875rem; }
+.operations-compactes .operation-libelle { white-space: normal; line-height: 1.3; }
+.operations-compactes li { gap: 2px 12px; }
+
+.filtres { display: grid; grid-template-columns: 1.4fr 1fr 1fr auto; gap: 12px; align-items: end; margin-top: 20px; }
+.filtres .bouton { padding: 15px 18px; }
+#historique-retour { margin-top: 16px; }
+#historique { margin-top: 12px; }
+#historique-plus { margin-top: 16px; }
 
 /* ---------- Espace agent ---------- */
-.saisie-code {
-  font: 700 2rem/1 var(--police-titre); letter-spacing: 0.18em;
-  padding: 14px 16px; font-variant-numeric: tabular-nums;
-}
+.resume-guichet { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 20px; }
+.resume-guichet > div { background: var(--surface); border-radius: 18px; padding: 18px 20px; box-shadow: var(--ombre-douce); }
+.resume-guichet dt { color: var(--encre-douce); font-size: 0.9375rem; }
+.resume-guichet dd { margin-top: 6px; font: 700 1.75rem/1.1 var(--police-titre); letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+.resume-guichet .resume-fort { background: var(--safran); box-shadow: none; }
+.resume-guichet .resume-fort dt { color: rgba(23, 26, 51, 0.75); }
+
+.espace-agent { display: grid; grid-template-columns: minmax(280px, 400px) minmax(0, 1fr); gap: 24px; align-items: start; }
+.guichet > .aide { margin-top: 6px; }
+.guichet .formulaire { margin-top: 20px; }
+
+.saisie-code { font: 700 2rem/1 var(--police-titre); letter-spacing: 0.18em; padding: 14px 16px; font-variant-numeric: tabular-nums; }
 .saisie-code::placeholder { color: var(--trait); }
 
-.flux-entete { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; }
+.flux-entete { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px; }
 .connexion-agent { display: flex; align-items: center; gap: 10px; }
 .connexion-agent label { font-weight: 600; white-space: nowrap; }
-.connexion-agent input { width: 76px; padding: 10px 12px; }
+.connexion-agent input { width: 76px; min-height: 44px; padding: 8px 12px; }
 .connexion-agent .bouton { padding: 12px 16px; font-size: 0.9375rem; }
+.connexion-agent .icone { width: 18px; height: 18px; }
 
-.flux-etat { margin-top: 12px; font-size: 0.9375rem; color: var(--encre-douce); }
+.flux-etat { margin-top: 10px; font-size: 0.9375rem; color: var(--encre-douce); }
 .flux-etat[data-etat="ok"] { color: var(--menthe); }
 
-.alertes { margin-top: 20px; display: grid; gap: 10px; }
+.alertes { margin-top: 18px; display: grid; gap: 10px; }
 .alerte {
   display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 4px 16px;
-  padding: 16px 18px; border-radius: 14px; background: var(--papier);
+  padding: 16px 18px; border-radius: 16px; background: var(--papier);
 }
 .alerte-montant { font: 700 1.5rem/1.1 var(--police-titre); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
 .alerte-infos { grid-column: 1; font-size: 0.9375rem; color: var(--encre-douce); }
 .alerte-statut {
-  grid-row: 1 / span 2; grid-column: 2;
-  font-size: 0.875rem; font-weight: 600; padding: 6px 12px; border-radius: 999px;
-  background: var(--safran-pale); color: #7a5200;
+  grid-row: 1 / span 2; grid-column: 2; font-size: 0.875rem; font-weight: 600;
+  padding: 6px 12px; border-radius: 999px; background: var(--safran-pale); color: #7a5200;
 }
-.alerte[data-etat="paye"] { opacity: 0.7; }
+.alerte[data-etat="paye"] .alerte-montant { color: var(--encre-douce); }
 .alerte[data-etat="paye"] .alerte-statut { background: var(--menthe-pale); color: var(--menthe); }
-
 @keyframes arrivee-alerte { from { background: var(--safran-pale); } to { background: var(--papier); } }
 .alerte-nouvelle { animation: arrivee-alerte 2.4s ease-out; }
 
-.vide-alertes { margin-top: 20px; color: var(--encre-douce); max-width: 52ch; }
+.vide { display: flex; align-items: center; gap: 16px; margin-top: 18px; padding: 22px; border-radius: 16px; border: 1.5px dashed var(--trait); color: var(--encre-douce); }
+.vide-icone { flex: none; display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; background: var(--indigo-pale); color: var(--indigo); }
 
-/* ---------- Petits écrans ---------- */
-@media (max-width: 880px) {
-  .espace-client, .espace-agent { grid-template-columns: minmax(0, 1fr); gap: 16px; }
-  .portefeuille { position: static; }
+/* ---------- Pied de page ---------- */
+.pied {
+  width: 100%; max-width: 1200px; margin: 0 auto; padding: 24px;
+  display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px;
+  font-size: 0.875rem; color: var(--encre-legere); border-top: 1px solid var(--trait);
+}
+.pied a { color: var(--encre-douce); }
+
+/* ---------- Écrans moyens et petits ---------- */
+@media (max-width: 1000px) {
+  .tableau, .espace-agent { grid-template-columns: minmax(0, 1fr); }
+  .colonne-cote { position: static; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+  .bienvenue { grid-template-columns: minmax(0, 1fr); gap: 28px; }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 640px) {
   .barre { flex-wrap: wrap; gap: 12px 16px; padding: 16px; }
   .etat-api { order: 3; width: 100%; margin-left: 0; }
   .espaces { margin-left: auto; }
-  .page { padding: 0 16px 48px; }
-  .portefeuille, .guichet, .flux { padding: 20px; }
-  .operations { padding: 4px 20px 24px; }
+  .page { padding: 0 16px 40px; }
+  .bloc, .panneaux, .bienvenue-formulaire { padding: 20px; }
+  .carte-solde { padding: 22px; min-height: 180px; border-radius: 22px; }
+  /* Les tuiles défilent horizontalement : la cinquième dépasse un peu, ce qui montre qu'on peut faire glisser */
+  .actions {
+    display: flex; gap: 8px; overflow-x: auto; scroll-snap-type: x mandatory;
+    margin-inline: -16px; padding: 4px 16px 8px; scroll-padding-inline: 16px; scrollbar-width: none;
+  }
+  .actions::-webkit-scrollbar { display: none; }
+  .action { flex: 0 0 88px; scroll-snap-align: start; padding: 12px 6px 10px; font-size: 0.8125rem; border-radius: 16px; }
+  .action-icone { width: 40px; height: 40px; }
   .filtres { grid-template-columns: 1fr 1fr; }
   .filtres .champ:first-child, .filtres .bouton { grid-column: 1 / -1; }
+  .resume-guichet { grid-template-columns: 1fr 1fr; }
+  .resume-guichet .resume-fort { grid-column: 1 / -1; }
   .ticket-haut { padding: 20px; }
   .ticket-bas { padding: 16px 20px 20px; }
   .ticket-decoupe { margin: 0 16px; }
@@ -344,8 +447,9 @@ input[aria-invalid="true"] { border-color: var(--bissap); }
   .ticket-decoupe::after { right: -28px; }
   .suivi { flex-direction: column; gap: 10px; }
   .suivi-etape + .suivi-etape { padding-left: 0; }
+  .notifications { bottom: 16px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ticket-code .chiffre, .alerte-nouvelle { animation: none; }
+  .ticket-code .chiffre, .alerte-nouvelle, .notification { animation: none; }
 }

@@ -13,9 +13,22 @@
   <script type="module" src="app.js"></script>
 </head>
 <body>
+  <!-- Les icônes, dessinées une fois et réutilisées avec <use> -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="i-envoyer" viewBox="0 0 24 24"><path d="M6 18 18 6M9 6h9v9"/></symbol>
+    <symbol id="i-payer" viewBox="0 0 24 24"><path d="M5.5 8.5h13l-1 11h-11l-1-11Z"/><path d="M9 8.5V7a3 3 0 0 1 6 0v1.5"/></symbol>
+    <symbol id="i-deposer" viewBox="0 0 24 24"><path d="M12 4v10.5M7.5 10l4.5 4.5 4.5-4.5"/><path d="M5 19.5h14"/></symbol>
+    <symbol id="i-monde" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.6 2.7 2.6 14.3 0 17M12 3.5c-2.6 2.7-2.6 14.3 0 17"/></symbol>
+    <symbol id="i-historique" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
+    <symbol id="i-oeil" viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-oeil-barre" viewBox="0 0 24 24"><path d="M4 4l16 16M10 6c.6-.1 1.3-.5 2-.5 6 0 9.5 6.5 9.5 6.5a17 17 0 0 1-2.6 3.4M6.6 7.4A16 16 0 0 0 2.5 12S6 18.5 12 18.5a9 9 0 0 0 4.2-1"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-cloche" viewBox="0 0 24 24"><path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15l1.5-2Z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></symbol>
+  </svg>
+
   <!-- Barre du haut : la marque, le choix de l'espace et l'état de l'API -->
   <header class="barre">
-    <a class="marque" href="./">Go Pay</a>
+    <a class="marque" href="./"><span class="marque-signe" aria-hidden="true"></span>Go Pay</a>
     <nav class="espaces" aria-label="Espace">
       <button type="button" class="espace" data-espace="client" aria-pressed="true">Client</button>
       <button type="button" class="espace" data-espace="agent" aria-pressed="false">Agent</button>
@@ -28,206 +41,291 @@
 
   <main class="page">
     <!-- ===== Espace client ===== -->
-    <div class="espace-client" id="espace-client">
-      <aside class="portefeuille" aria-labelledby="titre-portefeuille">
-        <h1 class="visuellement-cache" id="titre-portefeuille">Mon wallet</h1>
+    <div id="espace-client">
 
-        <div class="champ">
-          <label for="choix-wallet">Wallet</label>
-          <select id="choix-wallet"></select>
+      <!-- Bienvenue : affichée tant qu'aucun wallet n'existe -->
+      <section class="bienvenue" id="bienvenue" hidden aria-labelledby="titre-bienvenue">
+        <div class="bienvenue-texte">
+          <h1 id="titre-bienvenue">Bienvenue sur Go Pay</h1>
+          <p class="bienvenue-intro">Envoyez de l'argent à n'importe quel numéro au Sénégal. Le bénéficiaire le retire en espèces chez un agent, avec un code à 6 chiffres.</p>
+          <ol class="etapes">
+            <li><span class="etape-numero">1</span><span><strong>Ouvrez votre wallet</strong> avec votre nom et votre numéro.</span></li>
+            <li><span class="etape-numero">2</span><span><strong>Déposez puis envoyez</strong> : les frais sont de 1 %, 50 FCFA au moins.</span></li>
+            <li><span class="etape-numero">3</span><span><strong>Transmettez le code</strong> : le bénéficiaire retire l'argent chez un agent.</span></li>
+          </ol>
         </div>
-
-        <div class="solde" id="bloc-solde">
-          <p class="solde-libelle">Solde disponible</p>
-          <p class="solde-montant"><span id="solde-montant">0</span> <span class="solde-devise">FCFA</span></p>
-          <p class="solde-infos" id="solde-infos"></p>
-        </div>
-
-        <p class="vide-wallet" id="vide-wallet" hidden>
-          Ouvrez un premier wallet pour envoyer, payer et suivre votre argent.
-        </p>
-
-        <details class="nouveau-wallet" id="nouveau-wallet">
-          <summary>Ouvrir un wallet</summary>
-          <form id="form-wallet" class="formulaire" novalidate>
-            <div class="champ">
-              <label for="wallet-nom">Nom</label>
-              <input id="wallet-nom" name="nom" autocomplete="name" required minlength="2" maxlength="100" placeholder="Awa Diop">
-            </div>
-            <div class="champ">
-              <label for="wallet-tel">Téléphone</label>
-              <input id="wallet-tel" name="telephone" type="tel" autocomplete="tel" required placeholder="+221 77 000 00 01">
-            </div>
-            <fieldset class="choix">
-              <legend>Type de wallet</legend>
-              <label><input type="radio" name="type" value="client" checked><span>Client</span></label>
-              <label><input type="radio" name="type" value="marchand"><span>Marchand</span></label>
-            </fieldset>
-            <div class="champ">
-              <label for="wallet-region">Région</label>
-              <select id="wallet-region" name="region"></select>
-            </div>
-            <button class="bouton" type="submit">Ouvrir le wallet</button>
-            <div class="retour" aria-live="polite"></div>
-          </form>
-        </details>
-      </aside>
-
-      <section class="operations" aria-label="Opérations">
-        <div class="onglets" role="tablist" aria-label="Opérations">
-          <button type="button" role="tab" class="onglet" id="onglet-envoyer" aria-controls="panneau-envoyer" aria-selected="true">Envoyer</button>
-          <button type="button" role="tab" class="onglet" id="onglet-payer" aria-controls="panneau-payer" aria-selected="false" tabindex="-1">Payer</button>
-          <button type="button" role="tab" class="onglet" id="onglet-deposer" aria-controls="panneau-deposer" aria-selected="false" tabindex="-1">Déposer</button>
-          <button type="button" role="tab" class="onglet" id="onglet-diaspora" aria-controls="panneau-diaspora" aria-selected="false" tabindex="-1">Depuis l'étranger</button>
-          <button type="button" role="tab" class="onglet" id="onglet-historique" aria-controls="panneau-historique" aria-selected="false" tabindex="-1">Historique</button>
-        </div>
-
-        <!-- Envoyer : transfert vers un numéro, retiré en espèces avec un code -->
-        <div class="panneau" role="tabpanel" id="panneau-envoyer" aria-labelledby="onglet-envoyer">
-          <h2>Envoyer de l'argent</h2>
-          <p class="aide">Le bénéficiaire retire l'argent en espèces chez un agent, avec le code que vous lui transmettez.</p>
-          <form id="form-envoyer" class="formulaire" novalidate>
-            <div class="champ">
-              <label for="envoi-tel">Numéro du bénéficiaire</label>
-              <input id="envoi-tel" name="beneficiaire_tel" type="tel" required placeholder="+221 78 000 00 02">
-            </div>
-            <div class="champ">
-              <label for="envoi-montant">Montant en FCFA</label>
-              <input id="envoi-montant" name="montant" type="number" inputmode="numeric" min="100" step="1" required placeholder="15 000">
-              <p class="apercu" id="envoi-apercu">100 FCFA minimum. Frais de 1 %, 50 FCFA au moins.</p>
-            </div>
-            <button class="bouton" type="submit" id="envoi-bouton">Envoyer</button>
-            <div class="retour" aria-live="polite"></div>
-          </form>
-        </div>
-
-        <!-- Payer : paiement chez un marchand -->
-        <div class="panneau" role="tabpanel" id="panneau-payer" aria-labelledby="onglet-payer" hidden>
-          <h2>Payer un marchand</h2>
-          <p class="aide">Le montant passe directement de votre wallet à celui du marchand, sans frais.</p>
-          <form id="form-payer" class="formulaire" novalidate>
-            <div class="champ">
-              <label for="paiement-marchand">Marchand</label>
-              <select id="paiement-marchand" name="marchand_id" required></select>
-            </div>
-            <div class="champ">
-              <label for="paiement-montant">Montant en FCFA</label>
-              <input id="paiement-montant" name="montant" type="number" inputmode="numeric" min="1" step="1" required placeholder="7 500">
-            </div>
-            <button class="bouton" type="submit">Payer</button>
-            <div class="retour" aria-live="polite"></div>
-          </form>
-        </div>
-
-        <!-- Déposer : créditer le wallet -->
-        <div class="panneau" role="tabpanel" id="panneau-deposer" aria-labelledby="onglet-deposer" hidden>
-          <h2>Déposer de l'argent</h2>
-          <p class="aide">Le dépôt est crédité tout de suite sur le wallet sélectionné.</p>
-          <form id="form-deposer" class="formulaire" novalidate>
-            <div class="champ">
-              <label for="depot-montant">Montant en FCFA</label>
-              <input id="depot-montant" name="montant" type="number" inputmode="numeric" min="1" step="1" required placeholder="20 000">
-            </div>
-            <div class="montants-rapides" aria-label="Montants rapides">
-              <button type="button" data-montant="5000">5 000</button>
-              <button type="button" data-montant="20000">20 000</button>
-              <button type="button" data-montant="100000">100 000</button>
-            </div>
-            <button class="bouton" type="submit">Déposer</button>
-            <div class="retour" aria-live="polite"></div>
-          </form>
-        </div>
-
-        <!-- Depuis l'étranger : transfert payé en devise, converti en FCFA -->
-        <div class="panneau" role="tabpanel" id="panneau-diaspora" aria-labelledby="onglet-diaspora" hidden>
-          <h2>Envoyer depuis l'étranger</h2>
-          <p class="aide">Le paiement en euros ou en dollars est encaissé par un partenaire : votre wallet n'est pas débité. Go Pay convertit le montant en FCFA au taux du jour.</p>
-          <form id="form-diaspora" class="formulaire" novalidate>
-            <fieldset class="choix">
-              <legend>Devise</legend>
-              <label><input type="radio" name="devise" value="EUR" checked><span>Euro</span></label>
-              <label><input type="radio" name="devise" value="USD"><span>Dollar</span></label>
-            </fieldset>
-            <div class="champ">
-              <label for="diaspora-montant">Montant en devise</label>
-              <input id="diaspora-montant" name="montant_devise" type="number" inputmode="decimal" min="0.01" step="0.01" required placeholder="100">
-              <p class="apercu" id="diaspora-apercu">1 euro vaut 655,957 FCFA (parité fixe).</p>
-            </div>
-            <div class="champ">
-              <label for="diaspora-tel">Numéro du bénéficiaire</label>
-              <input id="diaspora-tel" name="beneficiaire_tel" type="tel" required placeholder="+221 78 000 00 02">
-            </div>
-            <button class="bouton" type="submit">Envoyer</button>
-            <div class="retour" aria-live="polite"></div>
-          </form>
-        </div>
-
-        <!-- Historique : les opérations du wallet, filtrables -->
-        <div class="panneau" role="tabpanel" id="panneau-historique" aria-labelledby="onglet-historique" hidden>
-          <h2>Historique</h2>
-          <form id="form-historique" class="filtres" novalidate>
-            <div class="champ">
-              <label for="filtre-type">Opération</label>
-              <select id="filtre-type" name="type">
-                <option value="">Toutes</option>
-                <option value="depot">Dépôts</option>
-                <option value="transfert">Transferts envoyés</option>
-                <option value="transfert_diaspora">Depuis l'étranger</option>
-                <option value="paiement_envoye">Paiements</option>
-                <option value="paiement_recu">Paiements reçus</option>
-              </select>
-            </div>
-            <div class="champ">
-              <label for="filtre-du">Du</label>
-              <input id="filtre-du" name="du" type="date">
-            </div>
-            <div class="champ">
-              <label for="filtre-au">Au</label>
-              <input id="filtre-au" name="au" type="date">
-            </div>
-            <button class="bouton bouton-secondaire" type="submit">Filtrer</button>
-          </form>
-          <div class="retour" id="historique-retour" aria-live="polite"></div>
-          <ol class="historique" id="historique"></ol>
-          <button class="bouton bouton-secondaire" type="button" id="historique-plus" hidden>Afficher les opérations plus anciennes</button>
+        <div class="bienvenue-formulaire">
+          <h2>Ouvrir mon wallet</h2>
+          <div id="place-bienvenue"></div>
         </div>
       </section>
+
+      <!-- Tableau de bord : le wallet sélectionné -->
+      <div class="tableau" id="tableau" hidden>
+        <div class="colonne-principale">
+          <div class="salutation">
+            <h1 id="salutation">Bonjour</h1>
+            <p id="salutation-suite">Que voulez-vous faire aujourd'hui ?</p>
+          </div>
+
+          <section class="carte-solde" aria-label="Solde">
+            <svg class="carte-motif" aria-hidden="true" focusable="false">
+              <defs>
+                <pattern id="motif-wax" width="44" height="44" patternUnits="userSpaceOnUse">
+                  <path d="M22 4 40 22 22 40 4 22Z" fill="none" stroke="currentColor" stroke-width="2"/>
+                  <path d="M22 13 31 22 22 31 13 22Z" fill="currentColor"/>
+                  <circle cx="0" cy="0" r="3" fill="currentColor"/><circle cx="44" cy="0" r="3" fill="currentColor"/>
+                  <circle cx="0" cy="44" r="3" fill="currentColor"/><circle cx="44" cy="44" r="3" fill="currentColor"/>
+                </pattern>
+              </defs>
+              <rect width="100%" height="100%" fill="url(#motif-wax)"/>
+            </svg>
+            <div class="carte-haut">
+              <p class="carte-libelle">Solde disponible</p>
+              <button type="button" class="carte-oeil" id="masquer-solde" aria-pressed="false">
+                <svg class="icone" aria-hidden="true"><use href="#i-oeil"/></svg>
+                <span>Masquer</span>
+              </button>
+            </div>
+            <p class="carte-montant"><span id="solde-montant">0</span> <span class="carte-devise">FCFA</span></p>
+            <p class="carte-infos" id="solde-infos"></p>
+          </section>
+
+          <div class="actions" role="tablist" aria-label="Opérations">
+            <button type="button" role="tab" class="action" id="onglet-envoyer" aria-controls="panneau-envoyer" aria-selected="true">
+              <span class="action-icone"><svg class="icone" aria-hidden="true"><use href="#i-envoyer"/></svg></span>Envoyer
+            </button>
+            <button type="button" role="tab" class="action" id="onglet-payer" aria-controls="panneau-payer" aria-selected="false" tabindex="-1">
+              <span class="action-icone"><svg class="icone" aria-hidden="true"><use href="#i-payer"/></svg></span>Payer
+            </button>
+            <button type="button" role="tab" class="action" id="onglet-deposer" aria-controls="panneau-deposer" aria-selected="false" tabindex="-1">
+              <span class="action-icone"><svg class="icone" aria-hidden="true"><use href="#i-deposer"/></svg></span>Déposer
+            </button>
+            <button type="button" role="tab" class="action" id="onglet-diaspora" aria-controls="panneau-diaspora" aria-selected="false" tabindex="-1">
+              <span class="action-icone"><svg class="icone" aria-hidden="true"><use href="#i-monde"/></svg></span>De l'étranger
+            </button>
+            <button type="button" role="tab" class="action" id="onglet-historique" aria-controls="panneau-historique" aria-selected="false" tabindex="-1">
+              <span class="action-icone"><svg class="icone" aria-hidden="true"><use href="#i-historique"/></svg></span>Historique
+            </button>
+          </div>
+
+          <div class="panneaux">
+            <!-- Envoyer : transfert vers un numéro, retiré en espèces avec un code -->
+            <div class="panneau" role="tabpanel" id="panneau-envoyer" aria-labelledby="onglet-envoyer">
+              <h2>Envoyer de l'argent</h2>
+              <p class="aide">Le bénéficiaire retire l'argent en espèces chez un agent, avec le code que vous lui transmettez.</p>
+              <form id="form-envoyer" class="formulaire" novalidate>
+                <div class="champ">
+                  <label for="envoi-tel">Numéro du bénéficiaire</label>
+                  <input id="envoi-tel" name="beneficiaire_tel" type="tel" required placeholder="+221 78 000 00 02">
+                  <div class="recents" data-pour="envoi-tel" hidden></div>
+                </div>
+                <div class="champ">
+                  <label for="envoi-montant">Montant en FCFA</label>
+                  <input id="envoi-montant" name="montant" type="number" inputmode="numeric" min="100" step="1" required placeholder="15 000">
+                  <p class="apercu" id="envoi-apercu">100 FCFA minimum. Frais de 1 %, 50 FCFA au moins.</p>
+                </div>
+                <button class="bouton" type="submit" id="envoi-bouton">Envoyer</button>
+                <div class="retour" aria-live="polite"></div>
+              </form>
+            </div>
+
+            <!-- Payer : paiement chez un marchand -->
+            <div class="panneau" role="tabpanel" id="panneau-payer" aria-labelledby="onglet-payer" hidden>
+              <h2>Payer un marchand</h2>
+              <p class="aide">Le montant passe directement de votre wallet à celui du marchand, sans frais.</p>
+              <form id="form-payer" class="formulaire" novalidate>
+                <div class="champ">
+                  <label for="paiement-marchand">Marchand</label>
+                  <select id="paiement-marchand" name="marchand_id" required></select>
+                </div>
+                <div class="champ">
+                  <label for="paiement-montant">Montant en FCFA</label>
+                  <input id="paiement-montant" name="montant" type="number" inputmode="numeric" min="1" step="1" required placeholder="7 500">
+                </div>
+                <button class="bouton" type="submit">Payer</button>
+                <div class="retour" aria-live="polite"></div>
+              </form>
+            </div>
+
+            <!-- Déposer : créditer le wallet -->
+            <div class="panneau" role="tabpanel" id="panneau-deposer" aria-labelledby="onglet-deposer" hidden>
+              <h2>Déposer de l'argent</h2>
+              <p class="aide">Le dépôt est crédité tout de suite sur votre wallet.</p>
+              <form id="form-deposer" class="formulaire" novalidate>
+                <div class="champ">
+                  <label for="depot-montant">Montant en FCFA</label>
+                  <input id="depot-montant" name="montant" type="number" inputmode="numeric" min="1" step="1" required placeholder="20 000">
+                </div>
+                <div class="pastilles-montant" aria-label="Montants rapides">
+                  <button type="button" data-montant="5000">5 000</button>
+                  <button type="button" data-montant="20000">20 000</button>
+                  <button type="button" data-montant="100000">100 000</button>
+                </div>
+                <button class="bouton" type="submit">Déposer</button>
+                <div class="retour" aria-live="polite"></div>
+              </form>
+            </div>
+
+            <!-- De l'étranger : transfert payé en devise, converti en FCFA -->
+            <div class="panneau" role="tabpanel" id="panneau-diaspora" aria-labelledby="onglet-diaspora" hidden>
+              <h2>Envoyer depuis l'étranger</h2>
+              <p class="aide">Le paiement en euros ou en dollars est encaissé par un partenaire : votre wallet n'est pas débité. Go Pay convertit le montant en FCFA au taux du jour.</p>
+              <form id="form-diaspora" class="formulaire" novalidate>
+                <fieldset class="choix">
+                  <legend>Devise</legend>
+                  <label><input type="radio" name="devise" value="EUR" checked><span>Euro</span></label>
+                  <label><input type="radio" name="devise" value="USD"><span>Dollar</span></label>
+                </fieldset>
+                <div class="champ">
+                  <label for="diaspora-montant">Montant en devise</label>
+                  <input id="diaspora-montant" name="montant_devise" type="number" inputmode="decimal" min="0.01" step="0.01" required placeholder="100">
+                  <p class="apercu" id="diaspora-apercu">1 euro vaut 655,957 FCFA (parité fixe).</p>
+                </div>
+                <div class="champ">
+                  <label for="diaspora-tel">Numéro du bénéficiaire</label>
+                  <input id="diaspora-tel" name="beneficiaire_tel" type="tel" required placeholder="+221 78 000 00 02">
+                  <div class="recents" data-pour="diaspora-tel" hidden></div>
+                </div>
+                <button class="bouton" type="submit">Envoyer</button>
+                <div class="retour" aria-live="polite"></div>
+              </form>
+            </div>
+
+            <!-- Historique : les opérations du wallet, filtrables -->
+            <div class="panneau" role="tabpanel" id="panneau-historique" aria-labelledby="onglet-historique" hidden>
+              <h2>Historique</h2>
+              <form id="form-historique" class="filtres" novalidate>
+                <div class="champ">
+                  <label for="filtre-type">Opération</label>
+                  <select id="filtre-type" name="type">
+                    <option value="">Toutes</option>
+                    <option value="depot">Dépôts</option>
+                    <option value="transfert">Transferts envoyés</option>
+                    <option value="transfert_diaspora">Depuis l'étranger</option>
+                    <option value="paiement_envoye">Paiements</option>
+                    <option value="paiement_recu">Paiements reçus</option>
+                  </select>
+                </div>
+                <div class="champ">
+                  <label for="filtre-du">Du</label>
+                  <input id="filtre-du" name="du" type="date">
+                </div>
+                <div class="champ">
+                  <label for="filtre-au">Au</label>
+                  <input id="filtre-au" name="au" type="date">
+                </div>
+                <button class="bouton bouton-secondaire" type="submit">Filtrer</button>
+              </form>
+              <div class="retour" id="historique-retour" aria-live="polite"></div>
+              <ol class="operations-liste" id="historique"></ol>
+              <button class="bouton bouton-secondaire" type="button" id="historique-plus" hidden>Afficher les opérations plus anciennes</button>
+            </div>
+          </div>
+        </div>
+
+        <aside class="colonne-cote">
+          <section class="bloc" aria-labelledby="titre-wallets">
+            <h2 id="titre-wallets">Mes wallets</h2>
+            <ul class="wallets" id="liste-wallets"></ul>
+            <details class="nouveau-wallet" id="nouveau-wallet">
+              <summary><span class="rond-plus"><svg class="icone" aria-hidden="true"><use href="#i-plus"/></svg></span>Ouvrir un wallet</summary>
+              <div id="place-cote"></div>
+            </details>
+          </section>
+
+          <section class="bloc" aria-labelledby="titre-activite">
+            <h2 id="titre-activite">Activité récente</h2>
+            <ol class="operations-liste operations-compactes" id="activite"></ol>
+            <button type="button" class="lien" id="voir-historique">Voir tout l'historique</button>
+          </section>
+        </aside>
+      </div>
+
+      <!-- Le formulaire d'ouverture, déplacé par app.js vers la bienvenue ou la colonne de côté -->
+      <form id="form-wallet" class="formulaire formulaire-wallet" novalidate>
+        <div class="champ">
+          <label for="wallet-nom">Nom</label>
+          <input id="wallet-nom" name="nom" autocomplete="name" required minlength="2" maxlength="100" placeholder="Awa Diop">
+        </div>
+        <div class="champ">
+          <label for="wallet-tel">Téléphone</label>
+          <input id="wallet-tel" name="telephone" type="tel" autocomplete="tel" required placeholder="+221 77 000 00 01">
+        </div>
+        <fieldset class="choix">
+          <legend>Type de wallet</legend>
+          <label><input type="radio" name="type" value="client" checked><span>Client</span></label>
+          <label><input type="radio" name="type" value="marchand"><span>Marchand</span></label>
+        </fieldset>
+        <div class="champ">
+          <label for="wallet-region">Région</label>
+          <select id="wallet-region" name="region"></select>
+        </div>
+        <button class="bouton" type="submit">Ouvrir le wallet</button>
+        <div class="retour" aria-live="polite"></div>
+      </form>
     </div>
 
     <!-- ===== Espace agent ===== -->
-    <div class="espace-agent" id="espace-agent" hidden>
-      <section class="guichet" aria-labelledby="titre-guichet">
-        <h2 id="titre-guichet">Payer un retrait</h2>
-        <p class="aide">Demandez au bénéficiaire son code et son numéro. Remettez les espèces seulement si le retrait est validé.</p>
-        <form id="form-retrait" class="formulaire" novalidate>
-          <div class="champ">
-            <label for="retrait-code">Code de retrait</label>
-            <input id="retrait-code" name="code_retrait" class="saisie-code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="\d{6}" required placeholder="000000">
-          </div>
-          <div class="champ">
-            <label for="retrait-tel">Numéro du bénéficiaire</label>
-            <input id="retrait-tel" name="beneficiaire_tel" type="tel" required placeholder="+221 78 000 00 02">
-          </div>
-          <button class="bouton" type="submit">Valider le retrait</button>
-          <div class="retour" aria-live="polite"></div>
-        </form>
-      </section>
+    <div id="espace-agent" hidden>
+      <div class="salutation">
+        <h1>Guichet agent</h1>
+        <p>Préparez les espèces dès qu'un transfert arrive, puis payez le bénéficiaire avec son code.</p>
+      </div>
 
-      <section class="flux" aria-labelledby="titre-flux">
-        <div class="flux-entete">
-          <h2 id="titre-flux">Transferts à préparer</h2>
-          <form id="form-agent" class="connexion-agent">
-            <label for="agent-id">Agent n°</label>
-            <input id="agent-id" name="agent_id" type="number" min="1" value="7">
-            <button class="bouton bouton-secondaire" type="submit" id="agent-bouton">Recevoir les alertes</button>
+      <dl class="resume-guichet" aria-label="Résumé du guichet">
+        <div><dt>Transferts reçus</dt><dd id="stat-recus">0</dd></div>
+        <div><dt>Retraits payés</dt><dd id="stat-payes">0</dd></div>
+        <div class="resume-fort"><dt>Espèces à préparer</dt><dd id="stat-especes">0 FCFA</dd></div>
+      </dl>
+
+      <div class="espace-agent">
+        <section class="bloc guichet" aria-labelledby="titre-guichet">
+          <h2 id="titre-guichet">Payer un retrait</h2>
+          <p class="aide">Demandez au bénéficiaire son code et son numéro. Remettez les espèces seulement si le retrait est validé.</p>
+          <form id="form-retrait" class="formulaire" novalidate>
+            <div class="champ">
+              <label for="retrait-code">Code de retrait</label>
+              <input id="retrait-code" name="code_retrait" class="saisie-code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="\d{6}" required placeholder="000000">
+            </div>
+            <div class="champ">
+              <label for="retrait-tel">Numéro du bénéficiaire</label>
+              <input id="retrait-tel" name="beneficiaire_tel" type="tel" required placeholder="+221 78 000 00 02">
+            </div>
+            <button class="bouton" type="submit">Valider le retrait</button>
+            <div class="retour" aria-live="polite"></div>
           </form>
-        </div>
-        <p class="flux-etat" id="flux-etat" role="status">Les alertes ne sont pas encore activées.</p>
-        <ol class="alertes" id="alertes"></ol>
-        <p class="vide-alertes" id="vide-alertes">Chaque nouveau transfert apparaît ici dès sa création, pour préparer les espèces à l'avance.</p>
-      </section>
+        </section>
+
+        <section class="bloc flux" aria-labelledby="titre-flux">
+          <div class="flux-entete">
+            <h2 id="titre-flux">Transferts à préparer</h2>
+            <form id="form-agent" class="connexion-agent">
+              <label for="agent-id">Agent n°</label>
+              <input id="agent-id" name="agent_id" type="number" min="1" value="7">
+              <button class="bouton bouton-secondaire" type="submit" id="agent-bouton">
+                <svg class="icone" aria-hidden="true"><use href="#i-cloche"/></svg><span>Recevoir les alertes</span>
+              </button>
+            </form>
+          </div>
+          <p class="flux-etat" id="flux-etat" role="status">Activez les alertes pour voir les transferts arriver en direct.</p>
+          <ol class="alertes" id="alertes"></ol>
+          <div class="vide" id="vide-alertes">
+            <span class="vide-icone"><svg class="icone" aria-hidden="true"><use href="#i-cloche"/></svg></span>
+            <p>Aucun transfert pour l'instant. Chaque nouvel envoi apparaîtra ici dès sa création.</p>
+          </div>
+        </section>
+      </div>
     </div>
   </main>
+
+  <footer class="pied">
+    <p>Go Pay, API de transfert d'argent réalisée en TD au Master 2 DATA-IA de l'ISM Dakar.</p>
+    <p><a href="/docs">Documentation de l'API</a></p>
+  </footer>
+
+  <!-- Les confirmations rapides, en bas de l'écran -->
+  <div class="notifications" id="notifications" aria-live="polite"></div>
 
   <!-- Modèle du ticket de retrait, rempli par app.js -->
   <template id="modele-ticket">

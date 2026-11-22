@@ -31,11 +31,16 @@ Chaque service tourne dans son propre terminal, depuis ce dossier.
 Une fois l'API lancée, l'interface s'ouvre sur http://127.0.0.1:8000 (redirection vers `/app/`).
 Elle est faite en HTML, CSS et JavaScript sans dépendance, dans `src/gopay/static/`, et servie par FastAPI.
 
-- **Espace client** : ouvrir un wallet, déposer, envoyer de l'argent, payer un marchand, envoyer depuis
-  l'étranger (EUR ou USD) et consulter l'historique filtré. Après un envoi, le code de retrait s'affiche
-  sur un ticket qui se met à jour en direct (SSE) au moment du retrait.
-- **Espace agent** : recevoir en direct (WebSocket) les transferts à préparer, puis valider un retrait avec
-  le code et le numéro du bénéficiaire.
+- **Bienvenue** : tant qu'aucun wallet n'existe, une page explique Go Pay en trois étapes, avec le
+  formulaire d'ouverture à côté.
+- **Espace client** : salutation, carte de solde (que l'on peut masquer), tuiles d'action pour envoyer,
+  payer, déposer, envoyer depuis l'étranger (EUR ou USD) et consulter l'historique filtré. Sur le côté :
+  la liste des wallets avec leurs avatars et l'activité récente. Les numéros déjà utilisés sont proposés
+  en un clic. Après un envoi, le code de retrait s'affiche sur un ticket qui se met à jour en direct (SSE)
+  au moment du retrait.
+- **Espace agent** : un résumé du guichet (transferts reçus, retraits payés, espèces à préparer), les
+  transferts reçus en direct (WebSocket) et la validation d'un retrait avec le code et le numéro du
+  bénéficiaire.
 
 Pour voir le temps réel, ouvrez deux onglets : l'espace agent dans l'un (bouton « Recevoir les alertes »),
 l'espace client dans l'autre. La diaspora a besoin du service de change (port 8001), et le contrôle
