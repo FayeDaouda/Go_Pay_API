@@ -107,6 +107,14 @@ def test_health(client: TestClient) -> None:
     assert client.get("/health").json() == {"statut": "ok"}
 
 
+def test_interface_web(client: TestClient) -> None:
+    assert client.get("/", follow_redirects=False).headers["location"] == "/app/"
+    page = client.get("/app/")
+    assert page.status_code == 200 and "<title>Go Pay</title>" in page.text
+    assert client.get("/app/app.js").status_code == 200
+    assert client.get("/app/styles.css").status_code == 200
+
+
 @pytest.mark.parametrize(
     ("montant", "frais"), [(15000, 150), (3000, 50), (100, 50), (5050, 51), (5049, 50), (12345, 123)]
 )

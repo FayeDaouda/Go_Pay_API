@@ -1,0 +1,351 @@
+/* Go Pay : feuille de style de l'interface web.
+   Indigo pour les actions, safran pour le ticket de retrait, bissap pour les erreurs. */
+
+:root {
+  --papier: #f2f3f7;
+  --surface: #ffffff;
+  --encre: #171a33;
+  --encre-douce: #565b75;
+  --trait: #d8dbe6;
+  --indigo: #24307a;
+  --indigo-fonce: #1a2359;
+  --indigo-pale: #e6e8f5;
+  --safran: #f2b33d;
+  --safran-pale: #fdf1d6;
+  --bissap: #a3214f;
+  --bissap-pale: #f9e7ed;
+  --menthe: #2f7d5b;
+  --menthe-pale: #e3f1ea;
+
+  --police-titre: "Unbounded", "Arial Black", system-ui, sans-serif;
+  --police-texte: "Schibsted Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --rayon-champ: 10px;
+  --rayon-panneau: 20px;
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--papier);
+  color: var(--encre);
+  font: 400 1rem/1.5 var(--police-texte);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, p, ol, dl, dd, fieldset { margin: 0; padding: 0; }
+ol { list-style: none; }
+fieldset { border: 0; min-width: 0; }
+
+h2 { font-size: 1.375rem; line-height: 1.25; font-weight: 700; letter-spacing: -0.01em; }
+
+[hidden] { display: none !important; }
+
+.visuellement-cache {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap;
+}
+
+:focus-visible { outline: 3px solid var(--safran); outline-offset: 2px; }
+
+/* ---------- Barre du haut ---------- */
+.barre {
+  display: flex; align-items: center; gap: 24px;
+  max-width: 1200px; margin: 0 auto; padding: 20px 24px;
+}
+
+.marque {
+  font: 700 1.375rem/1 var(--police-titre);
+  color: var(--indigo); text-decoration: none; letter-spacing: -0.02em;
+}
+
+.espaces {
+  display: inline-flex; padding: 4px; gap: 4px;
+  background: var(--indigo-pale); border-radius: 999px;
+}
+
+.espace {
+  border: 0; background: transparent; color: var(--indigo);
+  font: 600 0.9375rem/1 var(--police-texte);
+  padding: 10px 18px; border-radius: 999px; cursor: pointer;
+}
+.espace[aria-pressed="true"] { background: var(--indigo); color: #fff; }
+
+.etat-api {
+  margin-left: auto; display: inline-flex; align-items: center; gap: 8px;
+  font-size: 0.875rem; color: var(--encre-douce);
+}
+.pastille { width: 9px; height: 9px; border-radius: 50%; background: var(--trait); }
+.etat-api[data-etat="ok"] .pastille { background: var(--menthe); }
+.etat-api[data-etat="ko"] .pastille { background: var(--bissap); }
+.etat-api[data-etat="ko"] { color: var(--bissap); }
+
+/* ---------- Mise en page ---------- */
+.page { max-width: 1200px; margin: 0 auto; padding: 8px 24px 64px; }
+
+.espace-client {
+  display: grid; grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+  gap: 28px; align-items: start;
+}
+
+.espace-agent {
+  display: grid; grid-template-columns: minmax(280px, 400px) minmax(0, 1fr);
+  gap: 28px; align-items: start;
+}
+
+.portefeuille, .operations, .guichet, .flux {
+  background: var(--surface); border: 1px solid var(--trait);
+  border-radius: var(--rayon-panneau);
+}
+
+.portefeuille { padding: 24px; position: sticky; top: 16px; }
+.operations { padding: 8px 28px 32px; }
+.guichet { padding: 28px; }
+.flux { padding: 28px; }
+
+/* ---------- Solde : le chiffre principal de la page ---------- */
+.solde { margin: 28px 0 24px; }
+.solde-libelle { font-size: 0.9375rem; color: var(--encre-douce); }
+.solde-montant {
+  font: 700 clamp(2.25rem, 5vw, 3.25rem)/1.05 var(--police-titre);
+  letter-spacing: -0.03em; font-variant-numeric: tabular-nums;
+  margin-top: 6px; overflow-wrap: anywhere;
+}
+.solde-devise { font-size: 0.42em; font-weight: 500; letter-spacing: 0; color: var(--encre-douce); }
+.solde-infos { margin-top: 10px; color: var(--encre-douce); font-size: 0.9375rem; }
+
+.vide-wallet { margin: 24px 0; color: var(--encre-douce); }
+
+.nouveau-wallet { border-top: 1px solid var(--trait); padding-top: 16px; }
+.nouveau-wallet summary {
+  cursor: pointer; font-weight: 600; color: var(--indigo);
+  list-style: none; display: flex; align-items: center; gap: 8px;
+}
+.nouveau-wallet summary::-webkit-details-marker { display: none; }
+.nouveau-wallet summary::before {
+  content: "+"; display: inline-grid; place-items: center;
+  width: 24px; height: 24px; border-radius: 50%;
+  background: var(--indigo-pale); font-weight: 700;
+}
+.nouveau-wallet[open] summary::before { content: "\2212"; }
+.nouveau-wallet .formulaire { margin-top: 16px; }
+
+/* ---------- Onglets ---------- */
+.onglets {
+  display: flex; gap: 4px; border-bottom: 1px solid var(--trait);
+  overflow-x: auto; scrollbar-width: none; margin: 0 -8px;
+}
+.onglets::-webkit-scrollbar { display: none; }
+
+.onglet {
+  flex: none; border: 0; background: transparent; cursor: pointer;
+  font: 500 0.9375rem/1 var(--police-texte); color: var(--encre-douce);
+  padding: 18px 12px 15px; border-bottom: 3px solid transparent;
+}
+.onglet:hover { color: var(--encre); }
+.onglet[aria-selected="true"] { color: var(--indigo); font-weight: 700; border-bottom-color: var(--indigo); }
+
+.panneau { padding-top: 28px; max-width: 620px; }
+.panneau > .aide, .guichet > .aide { margin-top: 8px; }
+
+.aide { color: var(--encre-douce); max-width: 60ch; }
+
+/* ---------- Formulaires ---------- */
+.formulaire { display: grid; gap: 18px; margin-top: 24px; }
+.guichet .formulaire { margin-top: 20px; }
+
+.champ { display: grid; gap: 6px; }
+.champ label, .choix legend { font-size: 0.9375rem; font-weight: 600; }
+
+input, select {
+  width: 100%; min-height: 50px; font: inherit; color: var(--encre);
+  padding: 12px 14px; background: var(--surface);
+  border: 1px solid var(--trait); border-radius: var(--rayon-champ);
+}
+input::placeholder { color: #9a9eb3; }
+input:focus, select:focus { outline: none; border-color: var(--indigo); box-shadow: 0 0 0 3px var(--indigo-pale); }
+input[aria-invalid="true"] { border-color: var(--bissap); }
+
+.apercu { font-size: 0.875rem; color: var(--encre-douce); }
+.apercu strong { color: var(--encre); font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* Choix sous forme de boutons (type de wallet, devise) */
+.choix { display: flex; flex-wrap: wrap; gap: 8px; }
+.choix legend { width: 100%; margin-bottom: 6px; }
+.choix label { position: relative; }
+.choix input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.choix span {
+  display: inline-block; padding: 9px 16px; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--trait); font-weight: 500;
+}
+.choix input:checked + span { background: var(--indigo); border-color: var(--indigo); color: #fff; }
+.choix input:focus-visible + span { outline: 3px solid var(--safran); outline-offset: 2px; }
+
+.montants-rapides { display: flex; flex-wrap: wrap; gap: 8px; margin-top: -6px; }
+.montants-rapides button {
+  font: 500 0.875rem/1 var(--police-texte); color: var(--indigo); cursor: pointer;
+  background: var(--indigo-pale); border: 0; border-radius: 999px; padding: 9px 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.bouton {
+  justify-self: start; border: 0; cursor: pointer;
+  font: 600 1rem/1 var(--police-texte); color: #fff; background: var(--indigo);
+  padding: 15px 22px; border-radius: 12px;
+}
+.bouton:hover { background: var(--indigo-fonce); }
+.bouton:disabled { opacity: 0.55; cursor: progress; }
+
+.bouton-secondaire { background: transparent; color: var(--indigo); box-shadow: inset 0 0 0 1.5px var(--indigo); }
+.bouton-secondaire:hover { background: var(--indigo-pale); }
+
+/* ---------- Messages ---------- */
+.retour:empty { display: none; }
+.message { padding: 14px 16px; border-radius: 12px; max-width: 60ch; }
+.message-erreur { background: var(--bissap-pale); color: var(--bissap); }
+.message-ok { background: var(--menthe-pale); color: var(--menthe); }
+.message strong { display: block; color: inherit; }
+
+.conversion { margin-top: 12px; color: var(--encre-douce); }
+
+/* ---------- Le ticket de retrait ---------- */
+.ticket { background: var(--safran); border-radius: 16px; margin-top: 8px; max-width: 520px; }
+.ticket-haut { padding: 24px 26px 22px; }
+.ticket-titre { font-weight: 600; }
+.ticket-code {
+  display: flex; gap: 0.06em; margin: 6px 0 10px;
+  font: 700 clamp(2.75rem, 9vw, 4.25rem)/1 var(--police-titre);
+  letter-spacing: 0.02em; font-variant-numeric: tabular-nums;
+}
+.ticket-code .chiffre { display: inline-block; }
+.ticket-code .chiffre:nth-child(3) { margin-right: 0.32em; }
+.ticket-consigne { max-width: 46ch; }
+
+/* La découpe : un pointillé et deux encoches, comme un ticket de guichet */
+.ticket-decoupe { position: relative; height: 0; margin: 0 22px; border-top: 2px dashed rgba(23, 26, 51, 0.3); }
+.ticket-decoupe::before, .ticket-decoupe::after {
+  content: ""; position: absolute; top: -12px; width: 22px; height: 22px;
+  border-radius: 50%; background: var(--surface);
+}
+.ticket-decoupe::before { left: -34px; }
+.ticket-decoupe::after { right: -34px; }
+
+.ticket-bas { padding: 18px 26px 24px; }
+.ticket-details {
+  display: grid; grid-template-columns: max-content 1fr; gap: 6px 20px;
+  font-variant-numeric: tabular-nums;
+}
+.ticket-details dt { color: rgba(23, 26, 51, 0.72); }
+.ticket-details dd { font-weight: 600; text-align: right; }
+
+.suivi { display: flex; gap: 0; margin-top: 20px; }
+.suivi-etape { flex: 1; position: relative; display: flex; align-items: center; gap: 10px; font-weight: 500; }
+.suivi-etape + .suivi-etape { padding-left: 12px; }
+.suivi-point {
+  flex: none; width: 14px; height: 14px; border-radius: 50%;
+  border: 2px solid var(--encre); background: transparent;
+}
+.suivi-etape[data-etat="actif"] .suivi-point { background: var(--encre); box-shadow: 0 0 0 4px rgba(23, 26, 51, 0.14); }
+.suivi-etape[data-etat="fait"] .suivi-point { background: var(--menthe); border-color: var(--menthe); }
+.suivi-etape[data-etat="fait"] .suivi-texte { font-weight: 700; }
+.suivi-etape:not([data-etat]) { opacity: 0.55; }
+
+/* Le code apparaît chiffre par chiffre : le seul mouvement automatique de la page */
+@keyframes apparition-chiffre {
+  from { opacity: 0; transform: translateY(0.35em); }
+  to { opacity: 1; transform: none; }
+}
+.ticket-code .chiffre { animation: apparition-chiffre 360ms cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+
+/* ---------- Historique ---------- */
+.filtres {
+  display: grid; grid-template-columns: 1.4fr 1fr 1fr auto; gap: 12px;
+  align-items: end; margin-top: 20px;
+}
+.filtres .bouton { padding: 13px 18px; }
+#historique-retour { margin-top: 16px; }
+
+.historique { margin-top: 20px; }
+.historique li {
+  display: grid; grid-template-columns: 1fr auto; gap: 4px 16px;
+  padding: 14px 0; border-bottom: 1px solid var(--trait);
+}
+.historique li:first-child { border-top: 1px solid var(--trait); }
+.operation-libelle { font-weight: 600; }
+.operation-date { font-size: 0.875rem; color: var(--encre-douce); }
+.operation-montant {
+  font: 500 1.0625rem/1.3 var(--police-titre); text-align: right;
+  font-variant-numeric: tabular-nums; letter-spacing: -0.01em; white-space: nowrap;
+}
+.operation-montant[data-sens="entree"] { color: var(--menthe); }
+.operation-detail { font-size: 0.875rem; color: var(--encre-douce); text-align: right; }
+.historique-vide { padding: 24px 0; color: var(--encre-douce); }
+#historique-plus { margin-top: 20px; }
+
+/* ---------- Espace agent ---------- */
+.saisie-code {
+  font: 700 2rem/1 var(--police-titre); letter-spacing: 0.18em;
+  padding: 14px 16px; font-variant-numeric: tabular-nums;
+}
+.saisie-code::placeholder { color: var(--trait); }
+
+.flux-entete { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; }
+.connexion-agent { display: flex; align-items: center; gap: 10px; }
+.connexion-agent label { font-weight: 600; white-space: nowrap; }
+.connexion-agent input { width: 76px; padding: 10px 12px; }
+.connexion-agent .bouton { padding: 12px 16px; font-size: 0.9375rem; }
+
+.flux-etat { margin-top: 12px; font-size: 0.9375rem; color: var(--encre-douce); }
+.flux-etat[data-etat="ok"] { color: var(--menthe); }
+
+.alertes { margin-top: 20px; display: grid; gap: 10px; }
+.alerte {
+  display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 4px 16px;
+  padding: 16px 18px; border-radius: 14px; background: var(--papier);
+}
+.alerte-montant { font: 700 1.5rem/1.1 var(--police-titre); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.alerte-infos { grid-column: 1; font-size: 0.9375rem; color: var(--encre-douce); }
+.alerte-statut {
+  grid-row: 1 / span 2; grid-column: 2;
+  font-size: 0.875rem; font-weight: 600; padding: 6px 12px; border-radius: 999px;
+  background: var(--safran-pale); color: #7a5200;
+}
+.alerte[data-etat="paye"] { opacity: 0.7; }
+.alerte[data-etat="paye"] .alerte-statut { background: var(--menthe-pale); color: var(--menthe); }
+
+@keyframes arrivee-alerte { from { background: var(--safran-pale); } to { background: var(--papier); } }
+.alerte-nouvelle { animation: arrivee-alerte 2.4s ease-out; }
+
+.vide-alertes { margin-top: 20px; color: var(--encre-douce); max-width: 52ch; }
+
+/* ---------- Petits écrans ---------- */
+@media (max-width: 880px) {
+  .espace-client, .espace-agent { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .portefeuille { position: static; }
+}
+
+@media (max-width: 600px) {
+  .barre { flex-wrap: wrap; gap: 12px 16px; padding: 16px; }
+  .etat-api { order: 3; width: 100%; margin-left: 0; }
+  .espaces { margin-left: auto; }
+  .page { padding: 0 16px 48px; }
+  .portefeuille, .guichet, .flux { padding: 20px; }
+  .operations { padding: 4px 20px 24px; }
+  .filtres { grid-template-columns: 1fr 1fr; }
+  .filtres .champ:first-child, .filtres .bouton { grid-column: 1 / -1; }
+  .ticket-haut { padding: 20px; }
+  .ticket-bas { padding: 16px 20px 20px; }
+  .ticket-decoupe { margin: 0 16px; }
+  .ticket-decoupe::before { left: -28px; }
+  .ticket-decoupe::after { right: -28px; }
+  .suivi { flex-direction: column; gap: 10px; }
+  .suivi-etape + .suivi-etape { padding-left: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ticket-code .chiffre, .alerte-nouvelle { animation: none; }
+}

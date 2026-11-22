@@ -26,6 +26,21 @@ Chaque service tourne dans son propre terminal, depuis ce dossier.
 | FraudCheck (gRPC) | `uv run python -m gopay.fraude.serveur` | localhost:50051 |
 | Marchand de démonstration | `MARCHAND_SECRET=<secret> uv run fastapi dev marchand_demo.py --port 8002` | http://127.0.0.1:8002/recus |
 
+## Interface web
+
+Une fois l'API lancée, l'interface s'ouvre sur http://127.0.0.1:8000 (redirection vers `/app/`).
+Elle est faite en HTML, CSS et JavaScript sans dépendance, dans `src/gopay/static/`, et servie par FastAPI.
+
+- **Espace client** : ouvrir un wallet, déposer, envoyer de l'argent, payer un marchand, envoyer depuis
+  l'étranger (EUR ou USD) et consulter l'historique filtré. Après un envoi, le code de retrait s'affiche
+  sur un ticket qui se met à jour en direct (SSE) au moment du retrait.
+- **Espace agent** : recevoir en direct (WebSocket) les transferts à préparer, puis valider un retrait avec
+  le code et le numéro du bénéficiaire.
+
+Pour voir le temps réel, ouvrez deux onglets : l'espace agent dans l'un (bouton « Recevoir les alertes »),
+l'espace client dans l'autre. La diaspora a besoin du service de change (port 8001), et le contrôle
+anti-fraude de FraudCheck (port 50051).
+
 Autres points d'accès de l'API : GraphiQL sur http://127.0.0.1:8000/graphql, WebSocket des agents sur
 `ws://127.0.0.1:8000/ws/agents/{agent_id}`, suivi SSE sur `/v1/transferts/{id}/suivi`.
 
@@ -37,7 +52,7 @@ Les transferts et les paiements exigent les en-têtes `X-Wallet-Id` et `Idempote
 uv run ruff format .
 uv run ruff check .
 uv run mypy src
-uv run pytest          # 32 tests
+uv run pytest          # 33 tests
 ```
 
 Scripts de démonstration (l'API et, selon le cas, les autres services doivent tourner) :
@@ -64,6 +79,7 @@ src/gopay/
   idempotence.py    le stock des Idempotency-Key (R9)
   change.py         le client du service de change
   graphql_api.py    l'API GraphQL en lecture seule
+  static/           l'interface web (HTML, CSS, JavaScript)
   temps_reel.py     WebSocket des agents et suivi SSE
   webhooks.py       signature HMAC et envoi des webhooks
   fraude/           client et serveur FraudCheck (gRPC) ; fraud_pb2* est généré
@@ -101,5 +117,6 @@ uv run python -m grpc_tools.protoc -I protos --python_out=src --pyi_out=src --gr
 ## Note sur l'historique git
 
 Le TD3 a été réalisé avant le TD2. Le code du TD2 a ensuite été intégré au code existant sans retirer
-ce que le TD3 avait ajouté. Les tags `td2` et `td3` pointent donc tous les deux sur la version finale,
-qui contient les trois TD et passe les 32 tests.
+ce que le TD3 avait ajouté. Les tags `td2` et `td3` pointent donc tous les deux sur la version qui
+contient les trois TD et passe 32 tests. L'interface web a été ajoutée ensuite, sur la branche `main`
+(33 tests avec celui de l'interface).

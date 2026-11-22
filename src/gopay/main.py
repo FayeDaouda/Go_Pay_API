@@ -1,6 +1,10 @@
 """Point d'entrée : crée l'application et branche les routes."""
 
+from pathlib import Path
+
 from fastapi import FastAPI
+from fastapi.responses import RedirectResponse
+from fastapi.staticfiles import StaticFiles
 
 from gopay.errors import installer_gestionnaires
 from gopay.graphql_api import graphql_router
@@ -19,6 +23,16 @@ app.include_router(operations.router)
 app.include_router(marchands.router)
 app.include_router(temps_reel_router)
 app.include_router(graphql_router, prefix="/graphql")
+
+# L'interface web : des fichiers statiques servis par la même application, sur /app
+DOSSIER_FRONT = Path(__file__).parent / "static"
+app.mount("/app", StaticFiles(directory=DOSSIER_FRONT, html=True), name="front")
+
+
+@app.get("/", include_in_schema=False)
+def accueil() -> RedirectResponse:
+    """Ouvre l'interface web."""
+    return RedirectResponse("/app/")
 
 
 @app.get("/health", tags=["Supervision"])
