@@ -44,6 +44,10 @@ class OperationInterdite(GoPayError):
     status, code, titre = 422, "operation-interdite", "Opération interdite"
 
 
+class ServiceIndisponible(GoPayError):
+    status, code, titre = 503, "service-indisponible", "Service indisponible"
+
+
 # --- AJOUT étape 7 : conversion en réponse HTTP ---
 def probleme(request: Request, status: int, code: str, titre: str, detail: str, **extras: object) -> JSONResponse:
     corps = {
