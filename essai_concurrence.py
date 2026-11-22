@@ -16,6 +16,7 @@ service.deposer(awa.id, Decimal("10000"))
 
 
 def un_transfert(_: int) -> bool:
+    """Tente un transfert ; renvoie True s'il a réussi."""
     try:
         service.transferer(awa, "+221780000002", Decimal("1000"))  # 1 050 FCFA avec les frais
         return True

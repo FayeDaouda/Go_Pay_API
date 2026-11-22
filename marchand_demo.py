@@ -20,6 +20,7 @@ app = FastAPI(title="Boutique Ndiaye (démonstration)")
 
 @app.post("/hooks/gopay")
 async def recevoir(request: Request) -> dict[str, str]:
+    """Reçoit un webhook : vérifie la signature, l'horodatage et les doublons."""
     corps = await request.body()  # les octets bruts, tels qu'ils ont été signés
     if not verifier(SECRET, corps, request.headers.get("GoPay-Signature", "")):
         raise HTTPException(status_code=401, detail="Signature invalide ou message trop ancien")
@@ -34,4 +35,5 @@ async def recevoir(request: Request) -> dict[str, str]:
 
 @app.get("/recus")
 def lister() -> list[dict[str, Any]]:
+    """Les événements déjà reçus."""
     return recus

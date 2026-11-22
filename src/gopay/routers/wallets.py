@@ -13,17 +13,20 @@ router = APIRouter(prefix="/v1/wallets", tags=["Wallets"])
 
 @router.post("", status_code=201)
 def ouvrir_wallet(data: WalletIn, service: Service) -> WalletOut:
+    """Ouvre un wallet client ou marchand."""
     wallet = service.ouvrir_wallet(data.nom, data.telephone, data.type, data.region)
     return WalletOut.model_validate(wallet)
 
 
 @router.get("/{wallet_id}")
 def lire_wallet(wallet_id: int, service: Service) -> WalletOut:
+    """Le wallet et son solde."""
     return WalletOut.model_validate(service.lire_wallet(wallet_id))
 
 
 @router.post("/{wallet_id}/depots", status_code=201)
 def deposer(wallet_id: int, data: DepotIn, service: Service) -> TransactionOut:
+    """Dépose de l'argent sur le wallet."""
     return TransactionOut.model_validate(service.deposer(wallet_id, data.montant))
 
 
@@ -37,5 +40,6 @@ def historique(
     du: date | None = None,
     au: date | None = None,
 ) -> PageTransactions:
+    """L'historique paginé, filtrable par type et par dates."""
     items, suivant = service.historique(wallet_id, cursor, limit, type, du, au)
     return PageTransactions(items=[TransactionOut.model_validate(t) for t in items], next_cursor=suivant)

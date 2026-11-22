@@ -22,10 +22,12 @@ class GestionnaireAgents:
         self.connexions: dict[int, set[WebSocket]] = {}
 
     async def connecter(self, agent_id: int, ws: WebSocket) -> None:
+        """Accepte la connexion et la garde en mémoire."""
         await ws.accept()
         self.connexions.setdefault(agent_id, set()).add(ws)
 
     def deconnecter(self, agent_id: int, ws: WebSocket) -> None:
+        """Oublie une connexion fermée."""
         self.connexions.get(agent_id, set()).discard(ws)
 
     async def diffuser(self, message: dict[str, Any]) -> None:
@@ -40,6 +42,7 @@ agents = GestionnaireAgents()
 
 @router.websocket("/ws/agents/{agent_id}")
 async def canal_agent(ws: WebSocket, agent_id: int) -> None:
+    """Le canal WebSocket d'un agent : il reste ouvert et reçoit les alertes."""
     await agents.connecter(agent_id, ws)
     try:
         while True:
@@ -65,6 +68,7 @@ async def evenements(repo: MemoireRepository, transfert_id: int) -> AsyncIterato
 
 @router.get("/v1/transferts/{transfert_id}/suivi")
 async def suivre(transfert_id: int, repo: Annotated[MemoireRepository, Depends(get_repository)]) -> StreamingResponse:
+    """Suivi d'un transfert en direct (SSE), jusqu'au retrait."""
     if transfert_id not in repo.transferts:
         raise RessourceIntrouvable(f"Aucun transfert avec l'identifiant {transfert_id}.")
     return StreamingResponse(evenements(repo, transfert_id), media_type="text/event-stream")

@@ -14,6 +14,7 @@ REGIONS = ["Dakar", "Thiès", "Diourbel", "Kédougou", "Ziguinchor"]
 
 
 def transferts(nombre: int) -> Iterator[fraud_pb2.TransfertRequest]:
+    """Fabrique des transferts au hasard, un par un."""
     for i in range(nombre):
         yield fraud_pb2.TransfertRequest(
             wallet_id=i, montant=random.randint(1_000, 2_000_000), region=random.choice(REGIONS)

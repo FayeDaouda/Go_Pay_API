@@ -6,11 +6,14 @@ from decimal import Decimal
 
 
 def maintenant() -> datetime:
+    """L'heure actuelle en UTC."""
     return datetime.now(UTC)
 
 
 @dataclass
 class Wallet:
+    """Un porte-monnaie électronique, client ou marchand."""
+
     id: int
     nom: str
     telephone: str
@@ -22,6 +25,8 @@ class Wallet:
 
 @dataclass
 class Transfert:
+    """Un envoi d'argent, retiré en espèces avec un code à 6 chiffres."""
+
     id: int
     expediteur_id: int
     beneficiaire_tel: str
@@ -34,6 +39,8 @@ class Transfert:
 
 @dataclass
 class Transaction:
+    """Une ligne de l'historique d'un wallet."""
+
     id: int
     wallet_id: int
     type: str  # "depot", "transfert", "paiement_envoye", "paiement_recu"

@@ -27,7 +27,10 @@ def noter(requete: fraud_pb2.TransfertRequest) -> fraud_pb2.Verdict:
 
 
 class FraudCheck(fraud_pb2_grpc.FraudCheckServicer):
+    """L'implémentation du service décrit dans fraud.proto."""
+
     def Evaluer(self, request: fraud_pb2.TransfertRequest, context: grpc.ServicerContext) -> fraud_pb2.Verdict:
+        """Un transfert, un verdict."""
         if request.montant <= 0:
             context.abort(grpc.StatusCode.INVALID_ARGUMENT, "Le montant doit être positif.")
         return noter(request)
@@ -35,11 +38,13 @@ class FraudCheck(fraud_pb2_grpc.FraudCheckServicer):
     def Surveiller(
         self, request_iterator: Iterator[fraud_pb2.TransfertRequest], context: grpc.ServicerContext
     ) -> Iterator[fraud_pb2.Verdict]:
+        """Un flux de transferts, un flux de verdicts."""
         for requete in request_iterator:  # un flux entrant, un flux sortant
             yield noter(requete)
 
 
 def demarrer(port: int = 50051) -> grpc.Server:
+    """Démarre le serveur gRPC sur le port donné et le renvoie (pour pouvoir l'arrêter)."""
     serveur = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     fraud_pb2_grpc.add_FraudCheckServicer_to_server(FraudCheck(), serveur)
     serveur.add_insecure_port(f"[::]:{port}")

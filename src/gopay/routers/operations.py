@@ -30,6 +30,8 @@ def creer_transfert(
     cle: CleIdempotence,
     taches: BackgroundTasks,
 ) -> TransfertOut:
+    """Transfert vers un numéro de téléphone ; les agents sont prévenus en direct."""
+
     def action() -> TransfertOut:
         transfert = service.transferer(wallet, data.beneficiaire_tel, data.montant)
         alerte = {"type": "transfert", "transfert_id": transfert.id, "montant": str(transfert.montant)}
@@ -48,6 +50,8 @@ def creer_transfert_diaspora(
     cle: CleIdempotence,
     change: Change,
 ) -> TransfertDiasporaOut:
+    """Transfert payé en euros ou en dollars, converti en FCFA."""
+
     def action() -> TransfertDiasporaOut:
         transfert, taux = service.transferer_depuis_diaspora(
             wallet, data.beneficiaire_tel, data.devise, data.montant_devise, change
@@ -64,6 +68,7 @@ def creer_transfert_diaspora(
 
 @router.post("/retraits", status_code=201)
 def retirer(data: RetraitIn, service: Service) -> RetraitOut:
+    """Retrait en espèces avec le code reçu par le bénéficiaire."""
     transfert = service.retirer(data.code_retrait, data.beneficiaire_tel)
     return RetraitOut(transfert_id=transfert.id, montant=transfert.montant, statut="retire")
 
@@ -78,6 +83,8 @@ def payer(
     taches: BackgroundTasks,
     envoyeur: Envoyeur,
 ) -> TransactionOut:
+    """Paiement chez un marchand ; le marchand est prévenu par webhook."""
+
     def action() -> TransactionOut:
         transaction = service.payer(wallet, data.marchand_id, data.montant)
         webhook = service.repo.webhooks.get(data.marchand_id)

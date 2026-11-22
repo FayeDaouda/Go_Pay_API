@@ -43,23 +43,28 @@ def calculer_frais(montant: Decimal) -> Decimal:
 
 
 class GoPayService:
+    """Applique les règles métier ; ne connaît ni HTTP ni la base de données."""
+
     def __init__(self, repo: MemoireRepository, antifraude: AntiFraude | None = None) -> None:
         self.repo = repo
         self.antifraude = antifraude
 
     # ----- Wallets -----
     def ouvrir_wallet(self, nom: str, telephone: str, type_: str, region: str = "Dakar") -> Wallet:
+        """Ouvre un wallet, un seul par numéro de téléphone."""
         if self.repo.wallet_par_telephone(telephone) is not None:
             raise TelephoneDejaUtilise(f"Le numéro {telephone} a déjà un wallet.")
         return self.repo.creer_wallet(nom, telephone, type_, region)
 
     def lire_wallet(self, wallet_id: int) -> Wallet:
+        """Le wallet demandé, ou une erreur 404."""
         wallet = self.repo.wallet(wallet_id)
         if wallet is None:
             raise RessourceIntrouvable(f"Aucun wallet avec l'identifiant {wallet_id}.")
         return wallet
 
     def deposer(self, wallet_id: int, montant: Decimal) -> Transaction:
+        """Crédite le wallet, sous verrou (R10)."""
         wallet = self.lire_wallet(wallet_id)
         with self.repo.verrous(wallet.id):  # R10
             wallet.solde = self.repo.lire_solde(wallet) + montant
@@ -67,6 +72,7 @@ class GoPayService:
 
     # ----- Transferts (R1 à R5, R10, R12, R13) -----
     def transferer(self, expediteur: Wallet, beneficiaire_tel: str, montant: Decimal) -> Transfert:
+        """Contrôle anti-fraude, puis débit du montant et des frais sous verrou."""
         frais = calculer_frais(montant)  # R2
         total = montant + frais  # R3
         self._controler_fraude(expediteur, beneficiaire_tel, montant)  # R12, R13 : avant tout débit, hors verrou
@@ -85,6 +91,7 @@ class GoPayService:
             return transfert
 
     def _controler_fraude(self, expediteur: Wallet, beneficiaire_tel: str, montant: Decimal) -> None:
+        """R12 : bloquer si FraudCheck le demande ; R13 : que faire s'il ne répond pas."""
         if self.antifraude is None:
             return
         try:
@@ -123,6 +130,7 @@ class GoPayService:
 
     # ----- Retraits (R6) -----
     def retirer(self, code: str, beneficiaire_tel: str) -> Transfert:
+        """Marque le transfert comme retiré, une seule fois (R6)."""
         transfert = self.repo.transfert_par_code(code)
         if transfert is None or transfert.beneficiaire_tel != beneficiaire_tel:
             raise RessourceIntrouvable("Code de retrait inconnu pour ce numéro.")
@@ -134,6 +142,7 @@ class GoPayService:
 
     # ----- Paiements marchands (R7, R10) -----
     def payer(self, client: Wallet, marchand_id: int, montant: Decimal) -> Transaction:
+        """Débite le client et crédite le marchand, les deux sous verrou (R7, R10)."""
         marchand = self.repo.wallet(marchand_id)
         if marchand is None or marchand.type != "marchand":
             raise RessourceIntrouvable(f"Aucun marchand affilié avec l'identifiant {marchand_id}.")
@@ -174,6 +183,7 @@ class GoPayService:
         du: date | None = None,
         au: date | None = None,
     ) -> tuple[list[Transaction], int | None]:
+        """Une page d'historique, avec les filtres facultatifs."""
         self.lire_wallet(wallet_id)
         if du is not None and au is not None and du > au:
             raise OperationInterdite("La date « du » doit précéder la date « au ».")

@@ -30,6 +30,8 @@ def verifier(secret: str, corps: bytes, entete: str, tolerance: int = 300) -> bo
 
 
 class EnvoyeurWebhooks:
+    """Envoie les webhooks signés, avec trois tentatives au plus."""
+
     def __init__(self, delai: float = 5.0, tentatives: int = 3) -> None:
         self._http = httpx.Client(timeout=delai)
         self._tentatives = tentatives

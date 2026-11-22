@@ -13,11 +13,15 @@ from gopay.errors import CleDejaUtilisee, TraitementEnCours
 
 @dataclass
 class Entree:
+    """Ce que l'on retient pour une clé : l'empreinte de la requête et sa réponse."""
+
     empreinte: str
     reponse: dict[str, Any] | None = None  # None : traitement en cours
 
 
 class StockIdempotence:
+    """Mémorise les réponses par Idempotency-Key (en production : une table en base)."""
+
     def __init__(self) -> None:
         self._entrees: dict[str, Entree] = {}
         self._verrou = threading.Lock()

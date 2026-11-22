@@ -11,6 +11,8 @@ from gopay.models import Transaction, Transfert, Wallet
 
 
 class MemoireRepository:
+    """Stockage en mémoire, avec une latence simulée et un verrou par wallet."""
+
     def __init__(self, latence: float = 0.0) -> None:
         self.wallets: dict[int, Wallet] = {}
         self.transferts: dict[int, Transfert] = {}
@@ -22,6 +24,7 @@ class MemoireRepository:
         self._verrou_global = threading.Lock()
 
     def _prochain_id(self, nom: str) -> int:
+        """Donne le prochain identifiant, sans doublon même entre threads."""
         with self._verrou_global:
             self._compteurs[nom] += 1
             return self._compteurs[nom]
@@ -45,14 +48,17 @@ class MemoireRepository:
 
     # ----- Wallets -----
     def creer_wallet(self, nom: str, telephone: str, type_: str, region: str = "Dakar") -> Wallet:
+        """Enregistre un nouveau wallet."""
         wallet = Wallet(id=self._prochain_id("wallet"), nom=nom, telephone=telephone, type=type_, region=region)
         self.wallets[wallet.id] = wallet
         return wallet
 
     def wallet(self, wallet_id: int) -> Wallet | None:
+        """Le wallet de cet identifiant, ou None."""
         return self.wallets.get(wallet_id)
 
     def wallet_par_telephone(self, telephone: str) -> Wallet | None:
+        """Le wallet de ce numéro, ou None."""
         for wallet in self.wallets.values():
             if wallet.telephone == telephone:
                 return wallet
@@ -62,6 +68,7 @@ class MemoireRepository:
     def creer_transfert(
         self, expediteur_id: int, beneficiaire_tel: str, montant: Decimal, frais: Decimal, code: str
     ) -> Transfert:
+        """Enregistre un nouveau transfert en attente de retrait."""
         transfert = Transfert(
             id=self._prochain_id("transfert"),
             expediteur_id=expediteur_id,
@@ -74,6 +81,7 @@ class MemoireRepository:
         return transfert
 
     def transfert_par_code(self, code: str) -> Transfert | None:
+        """Le transfert de ce code de retrait, ou None."""
         for transfert in self.transferts.values():
             if transfert.code_retrait == code:
                 return transfert
@@ -83,6 +91,7 @@ class MemoireRepository:
     def ajouter_transaction(
         self, wallet: Wallet, type_: str, montant: Decimal, frais: Decimal, reference: str | None = None
     ) -> Transaction:
+        """Ajoute une ligne à l'historique, avec le solde après opération."""
         transaction = Transaction(
             id=self._prochain_id("transaction"),
             wallet_id=wallet.id,

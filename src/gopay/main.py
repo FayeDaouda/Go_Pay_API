@@ -10,7 +10,7 @@ from gopay.temps_reel import router as temps_reel_router
 app = FastAPI(
     title="Go Pay API",
     version="1.0.0",
-    description="API de transfert d'argent du wallet vers le cash (TD1, ISM Dakar).",
+    description="API de transfert d'argent du wallet vers le cash : REST, GraphQL, gRPC et temps réel (ISM Dakar).",
 )
 
 installer_gestionnaires(app)
@@ -23,4 +23,5 @@ app.include_router(graphql_router, prefix="/graphql")
 
 @app.get("/health", tags=["Supervision"])
 def health() -> dict[str, str]:
+    """Vérifie que l'API répond."""
     return {"statut": "ok"}

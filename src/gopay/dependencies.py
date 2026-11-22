@@ -21,10 +21,12 @@ _envoyeur = EnvoyeurWebhooks()
 
 
 def get_repository() -> MemoireRepository:
+    """Le stockage partagé par toute l'application."""
     return _repo
 
 
 def get_antifraude() -> AntiFraude:
+    """Le client FraudCheck ; remplacé par un faux dans les tests."""
     return _antifraude
 
 
@@ -32,14 +34,17 @@ def get_service(
     repo: Annotated[MemoireRepository, Depends(get_repository)],
     antifraude: Annotated[AntiFraude, Depends(get_antifraude)],
 ) -> GoPayService:
+    """Le service métier, construit à chaque requête avec ses dépendances."""
     return GoPayService(repo, antifraude)
 
 
 def get_idempotence() -> StockIdempotence:
+    """Le stock des Idempotency-Key déjà traitées."""
     return _idempotence
 
 
 def get_change() -> ClientChange:
+    """Le client du service de change ; remplacé par un faux dans les tests."""
     return _change
 
 
@@ -58,6 +63,7 @@ WalletCourant = Annotated[Wallet, Depends(wallet_courant)]
 
 
 def get_envoyeur() -> EnvoyeurWebhooks:
+    """L'envoyeur de webhooks ; remplacé par un faux dans les tests."""
     return _envoyeur
 
 

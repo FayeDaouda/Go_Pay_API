@@ -37,6 +37,8 @@ Info = strawberry.Info[Contexte, None]
 
 @strawberry.type
 class Wallet:
+    """Un wallet tel que les analystes le voient (sans le téléphone)."""
+
     id: int
     nom: str
     type: str
@@ -45,16 +47,20 @@ class Wallet:
 
     @classmethod
     def depuis(cls, w: models.Wallet) -> Wallet:
+        """Convertit un wallet stocké en type GraphQL."""
         return cls(id=w.id, nom=w.nom, type=w.type, region=w.region, solde=w.solde)
 
     @strawberry.field
     def transactions(self, info: Info, limite: int = 10) -> list[Transaction]:
+        """Les dernières transactions du wallet."""
         items = info.context.repo.transactions_du_wallet(self.id, None, min(limite, LIMITE_MAX))
         return [Transaction.depuis(t) for t in items]
 
 
 @strawberry.type
 class Transaction:
+    """Une transaction telle que les analystes la voient."""
+
     id: int
     type: str
     montant: Decimal
@@ -63,26 +69,33 @@ class Transaction:
 
     @classmethod
     def depuis(cls, t: models.Transaction) -> Transaction:
+        """Convertit une transaction stockée en type GraphQL."""
         return cls(id=t.id, type=t.type, montant=t.montant, frais=t.frais, wallet_id=t.wallet_id)
 
     @strawberry.field
     async def wallet(self, info: Info) -> Wallet:
+        """Le wallet de la transaction, chargé par lot grâce au DataLoader."""
         return await info.context.wallets.load(self.wallet_id)
 
 
 @strawberry.type
 class Query:
+    """Les points d'entrée de l'API GraphQL."""
+
     @strawberry.field
     def wallets(self, info: Info, limite: int = 20) -> list[Wallet]:
+        """Les wallets, dans la limite de LIMITE_MAX."""
         return [Wallet.depuis(w) for w in list(info.context.repo.wallets.values())[: min(limite, LIMITE_MAX)]]
 
     @strawberry.field
     def transactions(self, info: Info, type: str | None = None, limite: int = 20) -> list[Transaction]:
+        """Les transactions, filtrées par type si besoin."""
         items = [t for t in info.context.repo.transactions.values() if type is None or t.type == type]
         return [Transaction.depuis(t) for t in items[: min(limite, LIMITE_MAX)]]
 
 
 def get_contexte(repo: Annotated[MemoireRepository, Depends(get_repository)]) -> Contexte:
+    """Crée le contexte de chaque requête GraphQL."""
     return Contexte(repo)  # le même repository que l'API REST
 
 

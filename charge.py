@@ -15,12 +15,14 @@ http = httpx.Client(base_url=API, timeout=10)
 
 
 def nouveau_wallet(nom: str) -> int:
+    """Ouvre un wallet avec un numéro tiré au hasard."""
     tel = f"+22177{random.randint(0, 9_999_999):07d}"
     wallet_id: int = http.post("/v1/wallets", json={"nom": nom, "telephone": tel}).raise_for_status().json()["id"]
     return wallet_id
 
 
 def transferer(wallet_id: int, montant: int, cle: str) -> httpx.Response:
+    """Envoie un transfert de 1 000 FCFA ou plus avec la clé donnée."""
     return http.post(
         "/v1/transferts",
         json={"beneficiaire_tel": "+221780000002", "montant": montant},
@@ -29,6 +31,7 @@ def transferer(wallet_id: int, montant: int, cle: str) -> httpx.Response:
 
 
 def solde(wallet_id: int) -> str:
+    """Le solde actuel du wallet."""
     valeur: str = http.get(f"/v1/wallets/{wallet_id}").json()["solde"]
     return valeur
 

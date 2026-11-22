@@ -19,6 +19,7 @@ app = FastAPI(title="Service de change simulé")
 
 @app.get("/taux")
 def taux(de: str, vers: str = "XOF") -> dict[str, str]:
+    """Le taux devise vers FCFA ; parfois en panne ou lent, exprès."""
     tirage = random.random()
     if tirage < PANNE:
         raise HTTPException(status_code=503, detail="Service surchargé", headers={"Retry-After": "1"})

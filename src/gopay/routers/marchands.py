@@ -10,5 +10,6 @@ router = APIRouter(prefix="/v1/marchands", tags=["Marchands"])
 
 @router.put("/{marchand_id}/webhook")
 def configurer_webhook(marchand_id: int, data: WebhookIn, service: Service) -> WebhookOut:
+    """Enregistre l'adresse des webhooks d'un marchand et renvoie son secret (affiché une seule fois)."""
     secret = service.configurer_webhook(marchand_id, str(data.url))
     return WebhookOut(marchand_id=marchand_id, url=str(data.url), secret=secret)

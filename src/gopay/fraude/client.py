@@ -10,17 +10,22 @@ from gopay.fraude import fraud_pb2, fraud_pb2_grpc
 
 @dataclass
 class Verdict:
+    """L'avis de FraudCheck, indépendant du code généré par gRPC."""
+
     score: float
     bloquer: bool
     raison: str
 
 
 class ClientFraude:
+    """Appelle FraudCheck en gRPC, avec une échéance de 200 ms."""
+
     def __init__(self, adresse: str = "localhost:50051", echeance: float = 0.2) -> None:
         self._stub = fraud_pb2_grpc.FraudCheckStub(grpc.insecure_channel(adresse))
         self._echeance = echeance  # 200 ms au plus : un transfert n'attend pas
 
     def evaluer(self, wallet_id: int, montant: int, beneficiaire_tel: str, region: str) -> Verdict:
+        """Demande un verdict ; traduit les erreurs gRPC en erreurs Go Pay."""
         requete = fraud_pb2.TransfertRequest(
             wallet_id=wallet_id, montant=montant, beneficiaire_tel=beneficiaire_tel, region=region
         )
