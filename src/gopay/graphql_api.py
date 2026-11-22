@@ -7,6 +7,7 @@ from typing import Annotated
 
 import strawberry
 from fastapi import Depends
+from strawberry.dataloader import DataLoader
 from strawberry.fastapi import BaseContext, GraphQLRouter
 
 from gopay import models
@@ -17,12 +18,18 @@ LIMITE_MAX = 100
 
 
 class Contexte(BaseContext):
-    """Créé pour chaque requête GraphQL : le repository et un compteur de lectures."""
+    """Créé pour chaque requête GraphQL : le repository et les DataLoaders."""
 
     def __init__(self, repo: MemoireRepository) -> None:
         super().__init__()
         self.repo = repo
-        self.lectures_wallets = 0  # combien de fois lit-on un wallet ?
+        self.lectures_wallets = 0  # pour vérifier que le DataLoader regroupe bien les lectures
+        self.wallets = DataLoader(load_fn=self.charger_wallets)
+
+    async def charger_wallets(self, ids: list[int]) -> list[Wallet]:
+        """Appelée UNE fois par requête, avec tous les identifiants demandés."""
+        self.lectures_wallets += 1
+        return [Wallet.depuis(self.repo.wallets[i]) for i in ids]
 
 
 Info = strawberry.Info[Contexte, None]
@@ -59,9 +66,8 @@ class Transaction:
         return cls(id=t.id, type=t.type, montant=t.montant, frais=t.frais, wallet_id=t.wallet_id)
 
     @strawberry.field
-    def wallet(self, info: Info) -> Wallet:
-        info.context.lectures_wallets += 1  # une lecture PAR transaction : le problème N+1
-        return Wallet.depuis(info.context.repo.wallets[self.wallet_id])
+    async def wallet(self, info: Info) -> Wallet:
+        return await info.context.wallets.load(self.wallet_id)
 
 
 @strawberry.type
