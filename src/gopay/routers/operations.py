@@ -3,9 +3,10 @@
 import uuid
 from datetime import UTC, datetime
 
-from fastapi import APIRouter, BackgroundTasks
+from fastapi import APIRouter, BackgroundTasks, Response
 
 from gopay.dependencies import Change, CleIdempotence, Envoyeur, Idempotence, Service, WalletCourant
+from gopay.qr_retrait import qr_svg
 from gopay.schemas import (
     PaiementIn,
     RetraitIn,
@@ -64,6 +65,17 @@ def creer_transfert_diaspora(
         )
 
     return TransfertDiasporaOut.model_validate(idem.executer(f"diaspora:{wallet.id}", cle, data, action))
+
+
+@router.get(
+    "/transferts/{transfert_id}/qrcode",
+    response_class=Response,
+    responses={200: {"content": {"image/svg+xml": {}}, "description": "Le QR code en SVG"}},
+)
+def qrcode_retrait(transfert_id: int, wallet: WalletCourant, service: Service) -> Response:
+    """Le QR code de retrait d'un transfert, réservé à son expéditeur (il contient le code)."""
+    transfert = service.transfert_de(wallet, transfert_id)
+    return Response(qr_svg(transfert), media_type="image/svg+xml", headers={"Cache-Control": "no-store"})
 
 
 @router.post("/retraits", status_code=201)

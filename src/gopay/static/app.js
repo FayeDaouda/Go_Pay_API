@@ -353,7 +353,72 @@ function ticket(transfert, lignes) {
   const details = $(".ticket-details", t);
   for (const [terme, valeur] of lignes) details.append(element("dt", "", terme), element("dd", "", valeur));
   suivre(transfert.id, t);
+  chargerQr(transfert, t);
   return t;
+}
+
+// ---------- Le QR code de retrait ----------
+// La route est réservée à l'expéditeur : on envoie son X-Wallet-Id, donc pas de simple <img src>.
+async function chargerQr(transfert, t) {
+  const boite = $(".ticket-qr", t);
+  try {
+    const reponse = await fetch(`/v1/transferts/${transfert.id}/qrcode`, {
+      headers: { "X-Wallet-Id": String(transfert.expediteur_id) },
+    });
+    if (!reponse.ok) throw new Error();
+    const svg = await reponse.text();
+    boite.innerHTML = svg; // SVG produit par notre propre API
+    boite.setAttribute("role", "img");
+    boite.setAttribute("aria-label", `QR code du retrait, code ${transfert.code_retrait.split("").join(" ")}`);
+    preparerPartage(transfert, svg, t);
+  } catch {
+    boite.replaceChildren(element("span", "ticket-qr-attente", "QR code indisponible : utilisez le code à 6 chiffres."));
+  }
+}
+
+// Transforme le SVG en image PNG (fond blanc, marge), le format que les messageries acceptent.
+async function qrEnPng(svg, taille = 720) {
+  const source = svg.replace("<svg ", `<svg width="${taille}" height="${taille}" `);
+  const url = URL.createObjectURL(new Blob([source], { type: "image/svg+xml" }));
+  try {
+    const image = new Image();
+    image.src = url;
+    await image.decode();
+    const toile = document.createElement("canvas");
+    toile.width = toile.height = taille;
+    const ctx = toile.getContext("2d");
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0, 0, taille, taille);
+    const marge = Math.round(taille * 0.08);
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(image, marge, marge, taille - 2 * marge, taille - 2 * marge);
+    return await new Promise((ok) => toile.toBlob(ok, "image/png"));
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
+// « Partager » sur téléphone (WhatsApp, SMS…), « Enregistrer » sur ordinateur.
+function preparerPartage(transfert, svg, t) {
+  const bouton = $('[data-role="partager"]', t);
+  const nom = `go-pay-retrait-${transfert.id}.png`;
+  const peutPartager = Boolean(navigator.canShare?.({ files: [new File([""], nom, { type: "image/png" })] }));
+  $("span", bouton).textContent = peutPartager ? "Partager le QR code" : "Enregistrer le QR code";
+  bouton.hidden = false;
+  bouton.addEventListener("click", async () => {
+    const fichier = new File([await qrEnPng(svg)], nom, { type: "image/png" });
+    const texte = `Go Pay : ${fcfa(transfert.montant)} à retirer chez un agent. Code de retrait : ${transfert.code_retrait}.`;
+    if (peutPartager) {
+      try { await navigator.share({ files: [fichier], title: "Retrait Go Pay", text: texte }); } catch { /* partage annulé */ }
+      return;
+    }
+    const lien = element("a");
+    lien.href = URL.createObjectURL(fichier);
+    lien.download = nom;
+    lien.click();
+    setTimeout(() => URL.revokeObjectURL(lien.href), 1000);
+    notifier("QR code enregistré dans vos téléchargements.");
+  });
 }
 
 function marquerSuivi(t, statut) {
@@ -623,11 +688,139 @@ brancher($("#form-retrait"), async (donnees, zone) => {
   etat.guichet.aPreparer.delete(String(retrait.transfert_id));
   afficherGuichet();
   $("#form-retrait").reset();
+  $("#lecture-retour").replaceChildren();
   afficher(zone, "ok", `Retrait validé : remettez ${fcfa(retrait.montant)} en espèces.`, ` Transfert n°${retrait.transfert_id}.`);
   notifier("Retrait validé.");
 });
 
 $("#retrait-code").addEventListener("input", (e) => { e.target.value = e.target.value.replace(/\D/g, "").slice(0, 6); });
+
+// ---------- Lecture du QR code par l'agent ----------
+// Le navigateur sait parfois lire les QR codes lui-même (BarcodeDetector) ; sinon on charge jsQR.
+let detecteur = null;
+async function detecteurNatif() {
+  if (detecteur !== null) return detecteur;
+  detecteur = false;
+  if ("BarcodeDetector" in window) {
+    try {
+      if ((await BarcodeDetector.getSupportedFormats()).includes("qr_code")) {
+        detecteur = new BarcodeDetector({ formats: ["qr_code"] });
+      }
+    } catch { /* pas de détecteur natif */ }
+  }
+  return detecteur;
+}
+
+let promesseJsQR = null;
+function chargerJsQR() {
+  promesseJsQR ??= new Promise((ok, echec) => {
+    const script = document.createElement("script");
+    script.src = "https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js";
+    script.onload = () => ok(window.jsQR);
+    script.onerror = () => { promesseJsQR = null; echec(new Error("jsQR")); };
+    document.head.append(script);
+  });
+  return promesseJsQR;
+}
+
+const toileLecture = document.createElement("canvas");
+// Lit un QR code dans une image ou une vidéo ; renvoie le texte, ou null si rien n'est trouvé.
+async function decoderQr(source, largeur, hauteur) {
+  const natif = await detecteurNatif();
+  if (natif) {
+    const trouves = await natif.detect(source);
+    return trouves[0]?.rawValue ?? null;
+  }
+  const jsQR = await chargerJsQR();
+  toileLecture.width = largeur;
+  toileLecture.height = hauteur;
+  const ctx = toileLecture.getContext("2d", { willReadFrequently: true });
+  ctx.drawImage(source, 0, 0, largeur, hauteur);
+  return jsQR(ctx.getImageData(0, 0, largeur, hauteur).data, largeur, hauteur)?.data ?? null;
+}
+
+// Le QR code contient gopay://retrait?code=123456&tel=... ; un simple code à 6 chiffres est accepté aussi.
+function lireContenuRetrait(texte) {
+  try {
+    const adresse = new URL(texte);
+    const code = adresse.searchParams.get("code") ?? "";
+    if (adresse.protocol === "gopay:" && /^\d{6}$/.test(code)) return { code, tel: adresse.searchParams.get("tel") };
+  } catch { /* ce n'est pas une adresse */ }
+  const brut = texte.trim();
+  return /^\d{6}$/.test(brut) ? { code: brut, tel: null } : null;
+}
+
+function remplirRetrait(texte) {
+  const zone = $("#lecture-retour");
+  const retrait = lireContenuRetrait(texte);
+  if (!retrait) {
+    afficher(zone, "erreur", "Ce QR code n'est pas un retrait Go Pay.", " Demandez au bénéficiaire son code à 6 chiffres.");
+    return;
+  }
+  $("#retrait-code").value = retrait.code;
+  if (retrait.tel) $("#retrait-tel").value = telephone(retrait.tel);
+  afficher(zone, "ok", "QR code lu.", " Vérifiez le numéro avec le bénéficiaire, puis validez le retrait.");
+  $("#form-retrait button[type=submit]").focus();
+}
+
+// La caméra : on cherche un QR code quatre fois par seconde jusqu'à en trouver un.
+const scanner = $("#scanner");
+let flux = null;
+async function ouvrirScanner() {
+  const video = $("#scanner-video");
+  const etatScanner = $("#scanner-etat");
+  etatScanner.textContent = "Ouverture de la caméra.";
+  scanner.showModal();
+  try {
+    const camera = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
+    if (!scanner.open) { // la fenêtre a été fermée pendant la demande d'autorisation : on éteint la caméra
+      camera.getTracks().forEach((piste) => piste.stop());
+      return;
+    }
+    flux = camera;
+    video.srcObject = flux;
+    await video.play();
+    etatScanner.textContent = "Recherche d'un QR code.";
+    while (scanner.open && flux) {
+      if (video.readyState >= 2) {
+        const texte = await decoderQr(video, video.videoWidth, video.videoHeight).catch(() => null);
+        if (texte) {
+          fermerScanner();
+          remplirRetrait(texte);
+          return;
+        }
+      }
+      await new Promise((ok) => setTimeout(ok, 250));
+    }
+  } catch {
+    etatScanner.textContent = "Caméra indisponible. Importez une photo du QR code ou saisissez le code.";
+  }
+}
+
+function fermerScanner() {
+  flux?.getTracks().forEach((piste) => piste.stop());
+  flux = null;
+  if (scanner.open) scanner.close();
+}
+
+$("#scanner-ouvrir").addEventListener("click", ouvrirScanner);
+$("#scanner-fermer").addEventListener("click", fermerScanner);
+scanner.addEventListener("close", fermerScanner);
+
+$("#qr-photo").addEventListener("change", async (e) => {
+  const fichier = e.target.files?.[0];
+  e.target.value = "";
+  if (!fichier) return;
+  const zone = $("#lecture-retour");
+  try {
+    const image = await createImageBitmap(fichier);
+    const texte = await decoderQr(image, image.width, image.height);
+    if (texte) remplirRetrait(texte);
+    else afficher(zone, "erreur", "Aucun QR code trouvé sur cette photo.", " Essayez une photo plus nette, ou saisissez le code.");
+  } catch {
+    afficher(zone, "erreur", "Cette photo n'a pas pu être lue.", " Saisissez le code à 6 chiffres.");
+  }
+});
 
 // ---------- Espaces client / agent ----------
 function ouvrirEspace(nom) {

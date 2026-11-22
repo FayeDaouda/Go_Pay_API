@@ -9,6 +9,7 @@ dependencies = [
     "grpcio>=1.85.3",
     "grpcio-tools>=1.85.3",
     "httpx>=0.28.1",
+    "segno>=1.6.6",
     "strawberry-graphql>=0.341.2",
     "tenacity>=9.2.1",
 ]

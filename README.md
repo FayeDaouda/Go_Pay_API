@@ -36,11 +36,16 @@ Elle est faite en HTML, CSS et JavaScript sans dépendance, dans `src/gopay/stat
 - **Espace client** : salutation, carte de solde (que l'on peut masquer), tuiles d'action pour envoyer,
   payer, déposer, envoyer depuis l'étranger (EUR ou USD) et consulter l'historique filtré. Sur le côté :
   la liste des wallets avec leurs avatars et l'activité récente. Les numéros déjà utilisés sont proposés
-  en un clic. Après un envoi, le code de retrait s'affiche sur un ticket qui se met à jour en direct (SSE)
-  au moment du retrait.
+  en un clic. Après un envoi, le ticket de retrait affiche un QR code (et le code à 6 chiffres en
+  secours), que l'on peut partager au bénéficiaire. Le ticket se met à jour en direct (SSE) au moment
+  du retrait.
 - **Espace agent** : un résumé du guichet (transferts reçus, retraits payés, espèces à préparer), les
-  transferts reçus en direct (WebSocket) et la validation d'un retrait avec le code et le numéro du
-  bénéficiaire.
+  transferts reçus en direct (WebSocket) et la validation d'un retrait. L'agent scanne le QR code du
+  bénéficiaire avec la caméra (ou importe une photo) : le code et le numéro se remplissent seuls.
+
+Le QR code est produit par l'API (`GET /v1/transferts/{id}/qrcode`, en SVG, réservé à l'expéditeur) et
+contient `gopay://retrait?code=123456&tel=%2B221780000002`. Côté agent, la lecture utilise le détecteur
+du navigateur (BarcodeDetector) quand il existe, sinon la bibliothèque jsQR.
 
 Pour voir le temps réel, ouvrez deux onglets : l'espace agent dans l'un (bouton « Recevoir les alertes »),
 l'espace client dans l'autre. La diaspora a besoin du service de change (port 8001), et le contrôle
@@ -57,7 +62,7 @@ Les transferts et les paiements exigent les en-têtes `X-Wallet-Id` et `Idempote
 uv run ruff format .
 uv run ruff check .
 uv run mypy src
-uv run pytest          # 33 tests
+uv run pytest          # 35 tests
 ```
 
 Scripts de démonstration (l'API et, selon le cas, les autres services doivent tourner) :
@@ -87,6 +92,7 @@ src/gopay/
   static/           l'interface web (HTML, CSS, JavaScript)
   temps_reel.py     WebSocket des agents et suivi SSE
   webhooks.py       signature HMAC et envoi des webhooks
+  qr_retrait.py     le QR code de retrait (SVG, avec segno)
   fraude/           client et serveur FraudCheck (gRPC) ; fraud_pb2* est généré
   routers/          les routes REST
 protos/gopay/fraude/fraud.proto   le contrat gRPC
@@ -124,4 +130,4 @@ uv run python -m grpc_tools.protoc -I protos --python_out=src --pyi_out=src --gr
 Le TD3 a été réalisé avant le TD2. Le code du TD2 a ensuite été intégré au code existant sans retirer
 ce que le TD3 avait ajouté. Les tags `td2` et `td3` pointent donc tous les deux sur la version qui
 contient les trois TD et passe 32 tests. L'interface web a été ajoutée ensuite, sur la branche `main`
-(33 tests avec celui de l'interface).
+(35 tests avec ceux de l'interface et du QR code).

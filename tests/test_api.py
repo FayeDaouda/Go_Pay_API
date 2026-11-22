@@ -145,6 +145,29 @@ def test_solde_insuffisant(client: TestClient) -> None:
     assert solde(client, awa) == "10000"
 
 
+def test_qrcode_de_retrait(client: TestClient) -> None:
+    awa = ouvrir(client, "Awa", TEL_AWA, depot=20000)
+    modou = ouvrir(client, "Modou", TEL_MODOU)
+    transfert = client.post(
+        "/v1/transferts", json={"beneficiaire_tel": TEL_MODOU, "montant": 5000}, headers=entetes(awa)
+    ).json()
+    r = client.get(f"/v1/transferts/{transfert['id']}/qrcode", headers={"X-Wallet-Id": str(awa)})
+    assert r.status_code == 200
+    assert r.headers["content-type"].startswith("image/svg+xml")
+    assert r.text.startswith("<svg") and "viewBox" in r.text
+    # Un autre wallet ne peut pas obtenir le QR code (il contient le code de retrait)
+    autre = client.get(f"/v1/transferts/{transfert['id']}/qrcode", headers={"X-Wallet-Id": str(modou)})
+    assert autre.status_code == 404
+
+
+def test_contenu_du_qrcode() -> None:
+    from gopay.models import Transfert
+    from gopay.qr_retrait import contenu_qr
+
+    t = Transfert(1, 1, TEL_MODOU, Decimal("5000"), Decimal("50"), "123456")
+    assert contenu_qr(t) == "gopay://retrait?code=123456&tel=%2B221780000002"
+
+
 def test_code_de_retrait_utilisable_une_seule_fois(client: TestClient) -> None:
     awa = ouvrir(client, "Awa", TEL_AWA, depot=20000)
     corps = {"beneficiaire_tel": TEL_MODOU, "montant": 5000}

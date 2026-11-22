@@ -290,17 +290,30 @@ input:focus, select:focus { outline: none; border-color: var(--indigo); box-shad
 @keyframes notification-entree { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
 
 /* ---------- Le ticket de retrait ---------- */
-.ticket { background: var(--safran); border-radius: 18px; margin-top: 8px; max-width: 520px; }
-.ticket-haut { padding: 24px 26px 22px; }
-.ticket-titre { font-weight: 600; }
+.ticket { background: var(--safran); border-radius: 18px; margin-top: 8px; max-width: 600px; }
+.ticket-haut { padding: 24px 26px 22px; display: grid; grid-template-columns: 176px minmax(0, 1fr); gap: 24px; align-items: start; }
+
+/* Le QR code : un carré blanc, pour qu'il reste lisible par la caméra sur le fond safran */
+.ticket-qr {
+  display: grid; place-items: center; aspect-ratio: 1; padding: 14px;
+  background: #fff; border-radius: 16px;
+}
+.ticket-qr svg { display: block; width: 100%; height: auto; }
+.ticket-qr-attente { font-size: 0.8125rem; color: var(--encre-douce); text-align: center; }
+
+.ticket-titre { font: 700 1.25rem/1.2 var(--police-titre); letter-spacing: -0.02em; }
+.ticket-consigne { margin-top: 8px; max-width: 40ch; }
+.ticket-libelle-code { margin-top: 16px; font-size: 0.875rem; color: rgba(23, 26, 51, 0.75); }
 .ticket-code {
-  display: flex; gap: 0.06em; margin: 6px 0 10px;
-  font: 700 clamp(2.75rem, 9vw, 4.25rem)/1 var(--police-titre);
-  letter-spacing: 0.02em; font-variant-numeric: tabular-nums;
+  display: flex; gap: 0.06em; margin-top: 4px;
+  font: 700 clamp(1.75rem, 4vw, 2.25rem)/1 var(--police-titre);
+  letter-spacing: 0.04em; font-variant-numeric: tabular-nums;
 }
 .ticket-code .chiffre { display: inline-block; }
 .ticket-code .chiffre:nth-child(3) { margin-right: 0.32em; }
-.ticket-consigne { max-width: 46ch; }
+.bouton-ticket { margin-top: 18px; background: var(--encre); padding: 12px 16px; font-size: 0.9375rem; }
+.bouton-ticket:hover { background: #000; }
+.bouton-ticket .icone { width: 18px; height: 18px; }
 
 /* La découpe : un pointillé et deux encoches, comme un ticket de guichet */
 .ticket-decoupe { position: relative; height: 0; margin: 0 22px; border-top: 2px dashed rgba(23, 26, 51, 0.3); }
@@ -327,6 +340,33 @@ input:focus, select:focus { outline: none; border-color: var(--indigo); box-shad
 /* Le code apparaît chiffre par chiffre : le moment fort de la page */
 @keyframes apparition-chiffre { from { opacity: 0; transform: translateY(0.35em); } to { opacity: 1; transform: none; } }
 .ticket-code .chiffre { animation: apparition-chiffre 360ms cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+
+@keyframes apparition-qr { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: none; } }
+.ticket-qr svg { animation: apparition-qr 320ms ease-out both; }
+
+/* ---------- Lecture du QR code par l'agent ---------- */
+.lecture-qr { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+.lecture-qr .bouton { padding: 13px 16px; font-size: 0.9375rem; }
+.lecture-qr .icone { width: 19px; height: 19px; }
+.importer-photo { position: relative; }
+.importer-photo input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; min-height: 0; }
+.importer-photo:focus-within { outline: 3px solid var(--safran); outline-offset: 2px; }
+#lecture-retour { margin-top: 14px; }
+
+.separateur { display: flex; align-items: center; gap: 12px; margin-top: 22px; font-size: 0.875rem; color: var(--encre-legere); }
+.separateur::before, .separateur::after { content: ""; flex: 1; height: 1px; background: var(--trait); }
+.guichet .separateur + .formulaire { margin-top: 14px; }
+
+.scanner {
+  width: min(440px, calc(100% - 32px)); border: 0; border-radius: var(--rayon-bloc);
+  padding: 24px; color: var(--encre); box-shadow: 0 24px 64px -16px rgba(21, 28, 74, 0.5);
+}
+.scanner::backdrop { background: rgba(21, 28, 74, 0.55); }
+.scanner .aide { margin-top: 6px; }
+.scanner-cadre { position: relative; margin-top: 16px; aspect-ratio: 1; border-radius: 18px; overflow: hidden; background: var(--indigo-nuit); }
+.scanner-cadre video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.scanner-viseur { position: absolute; inset: 16%; border: 3px solid var(--safran); border-radius: 18px; box-shadow: 0 0 0 999px rgba(21, 28, 74, 0.35); }
+.scanner-etat { margin: 14px 0 16px; color: var(--encre-douce); font-size: 0.9375rem; }
 
 /* ---------- Listes d'opérations (activité récente et historique) ---------- */
 .operations-liste li {
@@ -440,7 +480,8 @@ input:focus, select:focus { outline: none; border-color: var(--indigo); box-shad
   .filtres .champ:first-child, .filtres .bouton { grid-column: 1 / -1; }
   .resume-guichet { grid-template-columns: 1fr 1fr; }
   .resume-guichet .resume-fort { grid-column: 1 / -1; }
-  .ticket-haut { padding: 20px; }
+  .ticket-haut { padding: 20px; grid-template-columns: minmax(0, 1fr); }
+  .ticket-qr { width: min(220px, 100%); justify-self: center; }
   .ticket-bas { padding: 16px 20px 20px; }
   .ticket-decoupe { margin: 0 16px; }
   .ticket-decoupe::before { left: -28px; }
@@ -451,5 +492,5 @@ input:focus, select:focus { outline: none; border-color: var(--indigo); box-shad
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ticket-code .chiffre, .alerte-nouvelle, .notification { animation: none; }
+  .ticket-code .chiffre, .ticket-qr svg, .alerte-nouvelle, .notification { animation: none; }
 }

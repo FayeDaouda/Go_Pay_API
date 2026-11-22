@@ -128,6 +128,13 @@ class GoPayService:
         )
         return transfert, taux
 
+    def transfert_de(self, expediteur: Wallet, transfert_id: int) -> Transfert:
+        """Un transfert de cet expéditeur ; 404 sinon, pour ne pas révéler le code d'un autre."""
+        transfert = self.repo.transferts.get(transfert_id)
+        if transfert is None or transfert.expediteur_id != expediteur.id:
+            raise RessourceIntrouvable(f"Aucun transfert {transfert_id} pour ce wallet.")
+        return transfert
+
     # ----- Retraits (R6) -----
     def retirer(self, code: str, beneficiaire_tel: str) -> Transfert:
         """Marque le transfert comme retiré, une seule fois (R6)."""
