@@ -1,21 +1,47 @@
 """Le stockage des données. Aujourd'hui en mémoire ; demain PostgreSQL."""
 
+import threading
+import time
+from collections.abc import Iterator
+from contextlib import ExitStack, contextmanager
+from datetime import date
 from decimal import Decimal
 
 from gopay.models import Transaction, Transfert, Wallet
 
 
 class MemoireRepository:
-    def __init__(self) -> None:
+    def __init__(self, latence: float = 0.0) -> None:
         self.wallets: dict[int, Wallet] = {}
         self.transferts: dict[int, Transfert] = {}
         self.transactions: dict[int, Transaction] = {}
         self.webhooks: dict[int, tuple[str, str]] = {}  # marchand_id → (url, secret)
         self._compteurs = {"wallet": 0, "transfert": 0, "transaction": 0}
+        self._latence = latence  # simule le temps de réponse d'une vraie base de données
+        self._verrous: dict[int, threading.Lock] = {}
+        self._verrou_global = threading.Lock()
 
     def _prochain_id(self, nom: str) -> int:
-        self._compteurs[nom] += 1
-        return self._compteurs[nom]
+        with self._verrou_global:
+            self._compteurs[nom] += 1
+            return self._compteurs[nom]
+
+    # ----- Verrous (R10) -----
+    @contextmanager
+    def verrous(self, *wallet_ids: int) -> Iterator[None]:
+        """Verrouille un ou plusieurs wallets, toujours dans le même ordre pour éviter l'interblocage."""
+        with ExitStack() as pile:
+            for wallet_id in sorted(set(wallet_ids)):
+                with self._verrou_global:
+                    verrou = self._verrous.setdefault(wallet_id, threading.Lock())
+                pile.enter_context(verrou)
+            yield
+
+    def lire_solde(self, wallet: Wallet) -> Decimal:
+        """Lit le solde comme le ferait une base de données : la réponse arrive quelques ms plus tard."""
+        solde = wallet.solde
+        time.sleep(self._latence)
+        return solde
 
     # ----- Wallets -----
     def creer_wallet(self, nom: str, telephone: str, type_: str, region: str = "Dakar") -> Wallet:
@@ -69,11 +95,28 @@ class MemoireRepository:
         self.transactions[transaction.id] = transaction
         return transaction
 
-    def transactions_du_wallet(self, wallet_id: int, avant: int | None, limite: int) -> list[Transaction]:
-        """Les transactions du wallet, de la plus récente à la plus ancienne."""
-        resultat = [
-            t
-            for t in sorted(self.transactions.values(), key=lambda t: t.id, reverse=True)
-            if t.wallet_id == wallet_id and (avant is None or t.id < avant)
-        ]
+    def transactions_du_wallet(
+        self,
+        wallet_id: int,
+        avant: int | None,
+        limite: int,
+        type_: str | None = None,
+        du: date | None = None,
+        au: date | None = None,
+    ) -> list[Transaction]:
+        """Les transactions du wallet, de la plus récente à la plus ancienne, filtrées."""
+        resultat = []
+        for t in sorted(self.transactions.values(), key=lambda t: t.id, reverse=True):
+            jour = t.cree_le.date()
+            if t.wallet_id != wallet_id:
+                continue
+            if avant is not None and t.id >= avant:
+                continue
+            if type_ is not None and t.type != type_:
+                continue
+            if du is not None and jour < du:
+                continue
+            if au is not None and jour > au:
+                continue
+            resultat.append(t)
         return resultat[:limite]

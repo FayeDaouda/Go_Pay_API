@@ -44,6 +44,14 @@ class OperationInterdite(GoPayError):
     status, code, titre = 422, "operation-interdite", "Opération interdite"
 
 
+class CleDejaUtilisee(GoPayError):
+    status, code, titre = 422, "idempotency-key-reutilisee", "Idempotency-Key déjà utilisée"
+
+
+class TraitementEnCours(GoPayError):
+    status, code, titre = 409, "traitement-en-cours", "Traitement en cours"
+
+
 class ServiceIndisponible(GoPayError):
     status, code, titre = 503, "service-indisponible", "Service indisponible"
 

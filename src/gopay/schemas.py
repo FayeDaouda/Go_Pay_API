@@ -77,6 +77,25 @@ class TransfertOut(BaseModel):
         return self.montant + self.frais
 
 
+# ---------- Transferts de la diaspora ----------
+class TransfertDiasporaIn(BaseModel):
+    beneficiaire_tel: Telephone
+    devise: Literal["EUR", "USD"]
+    montant_devise: Annotated[Decimal, Field(gt=0, max_digits=12, decimal_places=2)]
+
+    @field_validator("beneficiaire_tel", mode="before")
+    @classmethod
+    def sans_espaces(cls, valeur: object) -> object:
+        return nettoyer_telephone(valeur)
+
+
+class TransfertDiasporaOut(BaseModel):
+    devise: str
+    montant_devise: Decimal
+    taux: Decimal
+    transfert: TransfertOut
+
+
 # ---------- Retraits ----------
 class RetraitIn(BaseModel):
     code_retrait: str = Field(pattern=r"^\d{6}$")

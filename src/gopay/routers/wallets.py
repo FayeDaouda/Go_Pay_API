@@ -1,6 +1,7 @@
 """Les routes /v1/wallets : ouvrir, consulter, déposer, historique."""
 
-from typing import Annotated
+from datetime import date
+from typing import Annotated, Literal
 
 from fastapi import APIRouter, Query
 
@@ -32,6 +33,9 @@ def historique(
     service: Service,
     cursor: int | None = None,
     limit: Annotated[int, Query(ge=1, le=100)] = 20,
+    type: Literal["depot", "transfert", "transfert_diaspora", "paiement_envoye", "paiement_recu"] | None = None,
+    du: date | None = None,
+    au: date | None = None,
 ) -> PageTransactions:
-    items, suivant = service.historique(wallet_id, cursor, limit)
+    items, suivant = service.historique(wallet_id, cursor, limit, type, du, au)
     return PageTransactions(items=[TransactionOut.model_validate(t) for t in items], next_cursor=suivant)

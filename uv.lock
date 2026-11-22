@@ -512,7 +512,9 @@ dependencies = [
     { name = "fastapi", extra = ["standard"] },
     { name = "grpcio" },
     { name = "grpcio-tools" },
+    { name = "httpx" },
     { name = "strawberry-graphql" },
+    { name = "tenacity" },
 ]
 
 [package.dev-dependencies]
@@ -528,7 +530,9 @@ requires-dist = [
     { name = "fastapi", extras = ["standard"], specifier = ">=0.165.0" },
     { name = "grpcio", specifier = ">=1.85.3" },
     { name = "grpcio-tools", specifier = ">=1.85.3" },
+    { name = "httpx", specifier = ">=0.28.1" },
     { name = "strawberry-graphql", specifier = ">=0.341.2" },
+    { name = "tenacity", specifier = ">=9.2.1" },
 ]
 
 [package.metadata.requires-dev]
@@ -1804,6 +1808,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/ca/91/4c9344b92f3a8b24b6b34394de0bc32a96c2cfec08a89612e8ad15e63885/strawberry_graphql-0.341.2.tar.gz", hash = "sha256:8073fae26510fb25394a6ea9dd0f4e23da6bc303312fff684f6a884d59eedb72", size = 299246, upload-time = "2026-11-07T16:26:56.992Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/d6/a8/46312ba316ff70cda1fb8052572f2b488d117a96fa74c3ab29f58cd570c0/strawberry_graphql-0.341.2-py3-none-any.whl", hash = "sha256:73e9c4cf5e2fddd522d2741491a6fbba70f940d945ab0a40152b2fadf26d9a89", size = 396061, upload-time = "2026-11-07T16:26:54.835Z" },
+]
+
+[[package]]
+name = "tenacity"
+version = "9.2.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/82/9e/497c1c8ebe5a5b5d1d4a7511aea22c0bb1a97e3170d98abdef0e1b34265a/tenacity-9.2.1.tar.gz", hash = "sha256:a606b5c808d0cded4a359d5b9932d867ff2a6a6b64d37350260fd01bbdf83839", size = 58261, upload-time = "2026-10-07T12:13:01.633Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d6/26/1ff2b0721ac66a3ec5b1402b333110b352ab0a8724052ac279a7b82d40c4/tenacity-9.2.1-py3-none-any.whl", hash = "sha256:9e56f17539296baab7beabb08b92f6ee3d7be92d8be72d763360677c2ad6580e", size = 32310, upload-time = "2026-10-07T12:13:00.102Z" },
 ]
 
 [[package]]
